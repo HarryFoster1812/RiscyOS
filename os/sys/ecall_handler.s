@@ -1,22 +1,34 @@
+; --------------------
+; void ecall_handler()
+;
+; Handles system calls (ECALL) from user code.
+; Dispatches to the appropriate routine in ecall_table.
+;
+; Registers Used:
+; sp - stack pointer
+; ra - return address
+; a7 - syscall number
+; t0 - temporary for table base / limit
+; t1 - temporary for table offset
+ecall_handler:
+    subi sp, sp, 4
+    sw ra, [sp]
 
-ecall_handler
-  subi sp, sp, 4
-  sw   ra, [sp]
-	li      t0, ecall_max
-	bgeu    a7, t0, ecall_x ; a7 will be the syscall number
-	la      t0, ecall_table
-	slli    t1, a7, 2       ; word align
-	add     t0, t0, t1      ; calculate offset from table start
-	lw      t0, [t0]        ; load address of ecall
-	jr      t0              ; jump to ecall
+		; increment the return address of ecall
+		csrr t0, MEPC
+		addi t0, t0, 4
+		csrw MEPC, t0
 
-    ; add 4 to mret to get the correct return address
-    csrrw   t0, MEPC, t0
-    addi    t0, t0, 4
-    csrrw   t0, MEPC, t0
-  lw   ra, [sp]
-  addi sp, sp, 4
+    li t0, ecall_max
+    bgeu a7, t0, %F1          ; invalid syscall
+
+    la t0, ecall_table
+    slli t1, a7, 2                ; offset in table
+    add t0, t0, t1
+    lw t0, [t0]
+    jalr t0                          ; jump to ECALL routine
+
+		1
+    lw ra, [sp]
+    addi sp, sp, 4
     ret
-
-ecall_x
- ret                 

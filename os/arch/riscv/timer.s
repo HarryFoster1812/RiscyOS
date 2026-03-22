@@ -10,3 +10,4 @@ timer_interrupt:
 
     sw      t3, 0x718                ; Write mtimecmp low
     sw      t2, 0x71C                ; Write mtimecmp high
+		ret

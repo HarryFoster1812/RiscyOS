@@ -1,10 +1,6 @@
-ecall_table 
-            defw ecall_sendLCDControl
-            defw ecall_poll_serial_read
-            defw ecall_poll_serial_write
-
-            defw timer_start
-            defw timer_stop
-            defw timer_reset
-
-            defw ecall_poll_buttons
+; Table of ECALL handlers
+ECALL_TABLE_START:
+    ECALL_HANDLER_SEND_LCD_CONTROL      defw ecall_sendLCDControl
+    ECALL_HANDLER_LCD_PRINT_DECIMAL    defw ecall_LCD_print_decimal
+    ECALL_HANDLER_POLL_KEYBOARD        defw ecall_poll_keyboard
+ECALL_TABLE_END:

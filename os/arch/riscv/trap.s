@@ -75,20 +75,27 @@ mhandler:
 
 
 trap_handler:
-	csrr    t0, MCAUSE 
+    addi sp, sp, -4
+    sw ra, [sp]
+    csrr    t0, MCAUSE 
     bgez    t0, exceptions ; Branch if >= 0 (MSB clear)
-    andi    t0, t0, 0x7FFFFFFF
+    andi    t0, t0, 0xFF
 
     la      t1, interrupt_table
     slli    t0, t0, 2   ; multiply by 4 to get word offset
     add     t1, t1, t0
     lw      t1, [t1]
-    jr    t1
+    jalr    t1
+    j %F1
 
     exceptions:
     la      t1, exception_table
     slli    t0, t0, 2   ; multiply by 4 to get word offset
     add     t1, t1, t0
     lw      t1, [t1]
-    jr      t1
+    jalr      t1
+1
+    lw ra, [sp]
+    addi sp, sp, 4
+		ret
 

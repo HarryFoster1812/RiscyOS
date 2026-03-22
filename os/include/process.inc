@@ -14,7 +14,7 @@ STATE_BLOCKED EQU 3
 ;
 ;    u32 pid,
 ;    u32 pstatus,
-;    void* next;
+;    void* next,
 ;
 ;    char* pname,
 ;    void* pentry,
