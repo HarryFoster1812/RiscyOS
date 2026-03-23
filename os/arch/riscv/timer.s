@@ -1,5 +1,5 @@
 timer_interrupt:
-    li      t0, 400000               ; Interval = 10 ms in ticks
+    li      t0, 200000               ; Interval = 5 ms in ticks
 
     lw      t1, 0x718                ; Load mtimecmp low
     lw      t2, 0x71C                ; Load mtimecmp high

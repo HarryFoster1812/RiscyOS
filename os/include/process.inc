@@ -5,6 +5,8 @@ STATE_READY EQU 1
 STATE_RUNNING EQU 2
 STATE_BLOCKED EQU 3
 
+STACK_SIZE EQU 4096 ; Bytes
+
 
 ;struct {
 ;    trap_frame_t tf,

@@ -38,3 +38,7 @@ typedef struct {
 
     uint32_t root_cluster;
 } fat32_fs_t;
+
+
+
+

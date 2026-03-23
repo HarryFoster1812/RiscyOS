@@ -1,4 +1,5 @@
 STRUCT
+RECORD TRAP_FRAME_SIZE
 
 mepc WORD
 mstatus WORD
@@ -11,3 +12,5 @@ next WORD
 pname WORD
 pentry WORD
 psize WORD
+PCB_SIZE ALIAS
+
