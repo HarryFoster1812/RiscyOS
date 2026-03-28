@@ -52,8 +52,9 @@ ret
 
 ; for (int i=0;i<128;++i) bitmap[i]=0
 
+; User allocate (this will allocate user memory)
 ; a0 bytes to allocate
-alloc:
+ualloc:
     beqz a0, 2f
     call round_next_power_of_two
     li t0, MIN_BLOCK
@@ -74,4 +75,12 @@ alloc:
 ; a0 - memory address allocated (NULL if fail)
 try_alloc_block:
     la t0, alloc_bitmap
+
+
+
+; kernel memory allocate
+; this will user the internal kernel heap to allocate memory
+kmalloc:
+
+kfree:
 
