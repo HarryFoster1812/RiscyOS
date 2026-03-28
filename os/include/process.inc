@@ -1,3 +1,4 @@
+#pragma once
 #include "trap.inc"
 
 STATE_UNUSED EQU 0

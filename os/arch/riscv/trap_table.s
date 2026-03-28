@@ -21,10 +21,10 @@ interrupt_table:
     defw ecall_x                    ; Supervisor software interrupt
     defw ecall_x                    ; Reserved
     defw ecall_x                    ; Machine software interrupt
-    defw timer_handle_interrupt     ; User timer interrupt
-    defw timer_handle_interrupt     ; Supervisor timer interrupt
+    defw timer_interrupt						; User timer interrupt
+    defw timer_interrupt						; Supervisor timer interrupt
     defw ecall_x                    ; Reserved
-    defw timer_handle_interrupt     ; Machine timer interrupt
+    defw timer_interrupt						; Machine timer interrupt
     defw external_interrupt_handler ; User external interrupt
     defw external_interrupt_handler ; Supervisor external interrupt
     defw ecall_x                    ; Reserved

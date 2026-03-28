@@ -108,7 +108,7 @@ timer_reset:
     addi sp, sp, 4
     ret
 
-timer_handle_interrupt:
+timer_peripheral_handle_interrupt:
     subi sp, sp, 8
     sw a0, 0[sp]
     sw ra, 4[sp]
@@ -117,8 +117,6 @@ timer_handle_interrupt:
     li t0, TIMER_PORT
     li t1, 16
     sw t1, TIMER_CLEAR[t0]
-
-		call keybord_scan_irsq
 
     lw a0, 0[sp]
     lw ra, 4[sp]

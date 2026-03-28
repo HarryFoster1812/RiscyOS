@@ -1,3 +1,4 @@
+#pragma once
 STRUCT
 TF_RA   WORD
 TF_GP   WORD

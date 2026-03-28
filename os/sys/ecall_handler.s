@@ -19,10 +19,10 @@ ecall_handler:
 		addi t0, t0, 4
 		csrw MEPC, t0
 
-    li t0, ecall_max
+    li t0, ECALL_MAX_INDEX
     bgeu a7, t0, %F1          ; invalid syscall
 
-    la t0, ecall_table
+    la t0, ECALL_TABLE_START
     slli t1, a7, 2                ; offset in table
     add t0, t0, t1
     lw t0, [t0]
@@ -32,3 +32,7 @@ ecall_handler:
     lw ra, [sp]
     addi sp, sp, 4
     ret
+
+
+ecall_x:
+		j .

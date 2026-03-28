@@ -2,7 +2,7 @@ SERIAL_PORT             EQU     0x1_0500
 SERIAL_CONTROL_OFFSET   EQU     0x4
 
 
-ecall_poll_serial_read
+serial_irsq_read:
     mv      a0, zero
     li      t0, SERIAL_PORT
     lb      t1, SERIAL_CONTROL_OFFSET[t0]           ; read control byte
@@ -22,3 +22,93 @@ ecall_poll_serial_write
         
         sb      a0, [t0]                            ; Write the byte to the Data register (offset 0) [3, 5]
         ret                                         ; Return to caller [6, 7]
+
+
+ecall_poll_serial_read:
+	; Non-blocking (can return null)
+	addi sp, sp, -4
+	sw ra, [sp]
+	mv s0, a0 ; store the trap frame
+	call fifo_pop
+	sw a0, TF_A0[s0]
+	lw ra, [sp]
+	addi sp, sp, 4
+	ret
+
+
+; a0 byte to push
+; t0 - int* FIFO_HEAD
+; t1 - FIFO_HEAD
+; t2 - int* FIFO_TAIL
+; t3 - FIFO_TAIL
+; if overflow then the oldest data is overwritten and the head is incremented
+fifo_push:
+
+	la t0, FIFO_HEAD
+	lw t1, [t0]
+
+	la t2, FIFO_TAIL
+	lw t3, [t2]
+
+	sb a0, [t3] ; store byte
+
+	li t4, FIFO_SIZE 
+	li t5, fifo_base
+	add t4, t5, t4 ; pointer to last value 
+
+	; increment tail
+	addi t3, t3, 1
+	bne t4, t3, tail_wrap_false 
+	mv t3, t5
+
+	tail_wrap_false:
+
+	sw t3, [t2] ; store new tail
+
+	bne t1, t3, fifo_push_exit ; check if tail == head
+
+	; overflow has occured (increment head)
+	addi t1, t1, 1
+	bne t4, t1, %F1  ; if head == last then wrap 
+	mv t1, t5
+	1
+	sw t1, [t0] ; store new head
+
+	fifo_push_exit:
+	ret
+
+; t0 - int* FIFO_HEAD
+; t1 - FIFO_HEAD
+; t2 - int* FIFO_TAIL
+; t3 - FIFO_TAIL
+fifo_pop:
+	la t0, FIFO_HEAD
+	lw t1, [t0]
+
+	la t2, FIFO_TAIL
+	lw t3, [t2]
+
+	beq t1, t3, fifo_pop_fail ; if head == tail fail
+	; else return item
+	li t2, FIFO_SIZE ; overwrite tail since no longer needed
+	li t3, fifo_base
+	add t2, t2, t3
+	lb a0, [t1]       ; load contents of buffer
+	addi t1, t1, 1    ; increment head and rollover
+	bne t2, t1, %F1 ; if head == last then wrap 
+	mv t1, t3
+
+	1
+	sw t1, [t0]
+	ret
+
+	fifo_pop_fail:
+	mv a0, zero
+	ret
+
+STRUCT
+FIFO_BASE WORD ; Pointer to FIFO array
+FIFO_HEAD BYTE ; index into array
+FIFO_TAIL BYTE ; index into array
+FIFO_SIZE BYTE ; size of array
+FIFO_STRUCT_SIZE ALIAS

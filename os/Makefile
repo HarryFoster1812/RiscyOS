@@ -15,20 +15,21 @@ OUT_DIR = out
 FORMAT ?= -lk
 
 # Default target
-all: $(RVA_BIN) $(OUT_PRE) assemble
+all: $(RVA_BIN) assemble
 
 # Compile rva if needed
 $(RVA_BIN): $(RVA_SRC)
 	$(CC) $< -o $@
 
-# Preprocess main.s
-$(OUT_PRE): $(MAIN_SRC)
-	$(CC) -E -x assembler-with-cpp -P $< | \
+# Preprocess main.s (always runs)
+.PHONY: preprocess
+preprocess:
+	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) | \
 	sed 's/__NL__/\
-/g' > $@
+/g' > $(OUT_PRE)
 
 # Run assembler (must run from assembler dir)
-assemble: $(RVA_BIN) $(OUT_PRE)
+assemble: $(RVA_BIN) preprocess
 	@mkdir -p $(OUT_DIR)
 	cd $(ASSEMBLER_DIR) && ./rva $(FORMAT) $(abspath ../$(OUT_DIR)) ../$(notdir $(OUT_PRE))
 
