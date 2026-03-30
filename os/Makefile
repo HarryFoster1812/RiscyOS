@@ -1,18 +1,27 @@
-# Makefile
+# Top-level Makefile
 
 # Compiler
 CC = gcc
+RISCV_CC = riscv64-elf-gcc  # your RISC-V cross-compiler
 
 # Paths
 ASSEMBLER_DIR = assembler
 RVA_SRC = $(ASSEMBLER_DIR)/rva.c
 RVA_BIN = $(ASSEMBLER_DIR)/rva
+
 MAIN_SRC = main.s
 OUT_PRE = out.s
 OUT_DIR = out
 
 # Output format: -lk (kmd) or -e (ELF)
 FORMAT ?= -lk
+
+# Build folder for compiled assembly
+BUILD_DIR = _build
+
+# All C sources in kernel, drivers, and user
+C_SRCS := $(shell find kernel drivers user -name '*.c')
+S_SRCS := $(patsubst %.c,$(BUILD_DIR)/%.s,$(C_SRCS))
 
 # Default target
 all: $(RVA_BIN) assemble
@@ -21,9 +30,22 @@ all: $(RVA_BIN) assemble
 $(RVA_BIN): $(RVA_SRC)
 	$(CC) $< -o $@
 
+# Compile C -> RISC-V assembly in _build folder
+$(BUILD_DIR)/%.s: %.c
+	@mkdir -p $(dir $@)
+	$(RISCV_CC) -O2 -S -ffreestanding -nostdlib -march=rv32i -mabi=ilp32 $< -o $@
+
+# Generate include aggregator for all generated .s files
+$(BUILD_DIR)/all_includes.s: $(S_SRCS)
+	@mkdir -p $(BUILD_DIR)
+	@echo "; Auto-generated include list for all .s files" > $@
+	@for f in $(S_SRCS); do \
+	    echo "#include \"$${f}\"" >> $@; \
+	done
+
 # Preprocess main.s (always runs)
 .PHONY: preprocess
-preprocess:
+preprocess: $(BUILD_DIR)/all_includes.s
 	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) | \
 	sed 's/__NL__/\
 /g' > $(OUT_PRE)
@@ -37,5 +59,6 @@ assemble: $(RVA_BIN) preprocess
 .PHONY: clean
 clean:
 	rm -f $(OUT_PRE)
+	rm -rf $(BUILD_DIR)
 	cd $(ASSEMBLER_DIR) && rm -f rva
 	rm -rf $(OUT_DIR)
