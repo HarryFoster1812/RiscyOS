@@ -19,9 +19,13 @@ FORMAT ?= -lk
 # Build folder for compiled assembly
 BUILD_DIR = _build
 
+# Default: run conversion
+SKIP_CONVERT ?= 0
+
 # All C sources in kernel, drivers, and user
 C_SRCS := $(shell find kernel drivers user -name '*.c')
 S_SRCS := $(patsubst %.c,$(BUILD_DIR)/%.s,$(C_SRCS))
+S_CONV_SRCS := $(patsubst %.c,$(BUILD_DIR)/%.out.s,$(C_SRCS))
 
 # Default target
 all: $(RVA_BIN) assemble
@@ -33,19 +37,45 @@ $(RVA_BIN): $(RVA_SRC)
 # Compile C -> RISC-V assembly in _build folder
 $(BUILD_DIR)/%.s: %.c
 	@mkdir -p $(dir $@)
-	$(RISCV_CC) -O2 -S -ffreestanding -nostdlib -march=rv32i -mabi=ilp32 $< -o $@
+	# -Oz optimise aggressively for size
+	$(RISCV_CC) -Oz -S -ffreestanding -nostdlib \
+			-march=rv32i -mabi=ilp32 \
+			-fno-pic \
+			-mno-relax \
+			-fno-asynchronous-unwind-tables \
+			-fno-exceptions \
+			-fno-ident \
+			-fverbose-asm \
+			$< -o $@
 
 # Generate include aggregator for all generated .s files
 $(BUILD_DIR)/all_includes.s: $(S_SRCS)
 	@mkdir -p $(BUILD_DIR)
 	@echo "; Auto-generated include list for all .s files" > $@
-	@for f in $(S_SRCS); do \
+	@for f in $(S_CONV_SRCS); do \
 	    echo "#include \"$${f#$(BUILD_DIR)/}\"" >> $@; \
 	done
 
-# Preprocess main.s (always runs)
+# Build all _build/*.s files from .c
+.PHONY: compileC
+compileC: $(S_SRCS)
+	@echo "Compiled all C sources to .s files"
+
+.PHONY: convert
+convert: compileC
+ifeq ($(SKIP_CONVERT),0)
+	@for f in $(S_SRCS); do \
+	    echo "Converting $$f..."; \
+	    python3 toolchain/convert_generated_asm.py "$$f"; \
+	done
+else
+	@echo "Skipping conversion step"
+endif
+
+# Preprocess main.s (always runs) – now depends on convert
 .PHONY: preprocess
-preprocess: $(BUILD_DIR)/all_includes.s
+preprocess: convert $(BUILD_DIR)/all_includes.s
+	@echo "Preprocessing main.s..."
 	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) | \
 	sed 's/__NL__/\
 /g' > $(OUT_PRE)
