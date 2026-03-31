@@ -19,6 +19,7 @@ class DirectiveKind(Enum):
     OPTION  = auto()
     ATTRIBUTE = auto()
     SET = auto()
+    STRING = auto()
     UNKNOWN = auto()
 
 

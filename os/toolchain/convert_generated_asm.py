@@ -38,6 +38,7 @@ _DIRECTIVE_MAP = {
     ".option": DirectiveKind.OPTION,
     ".attribute": DirectiveKind.ATTRIBUTE,
     ".set": DirectiveKind.SET,
+    ".string": DirectiveKind.STRING,
 }
 
 
@@ -47,6 +48,7 @@ class Section(Enum):
     TEXT = auto()
     BSS  = auto()
     DATA = auto()
+    RODATA = auto()
     UNKNOWN = auto()
 
 @dataclass
@@ -55,6 +57,7 @@ class Module:
     functions:   list[Function]        = field(default_factory=list)
     data_defs:   list[DataDefinition]  = field(default_factory=list)
     global_syms: set[str]              = field(default_factory=set)
+    str_table:   dict[str, str]        = field(default_factory=dict)
 
     def get_function(self, name: str) -> Optional[Function]:
         return next((f for f in self.functions if f.name == name), None)
@@ -117,7 +120,6 @@ def parse(source: str, filename: str = "") -> Module:
     current_section  = Section.UNKNOWN
     current_function: Optional[Function] = None
     pending_label:    Optional[str]      = None   # label seen before next instruction
-    set_to_parse:     Optional[str]      = None   # .set before a data segement   
 
     i = 0
     while i < len(raw_lines):
@@ -131,7 +133,7 @@ def parse(source: str, filename: str = "") -> Module:
             name      = rl.label
             is_local  = name.startswith('.L')
 
-            if current_function and (is_local or current_section == Section.TEXT):
+            if current_function and (is_local and current_section == Section.TEXT):
                 lbl = Label(name=name, is_local=is_local, line_no=rl.line_no)
                 current_function.body.append(lbl)
             else:
@@ -155,7 +157,16 @@ def parse(source: str, filename: str = "") -> Module:
             
             if kind == DirectiveKind.SET:
                 # calculate LANCHOR 
-                pass
+                i += 1; continue
+
+            if kind == DirectiveKind.SECTION:
+                if ".text" in rl.args[0]:
+                    current_section = Section.TEXT
+                    i += 1; continue
+
+                elif ".rodata" in rl.args[0]:
+                    current_section = Section.RODATA
+                    i += 1; continue
 
             # track exported names
             if kind == DirectiveKind.GLOBL:
@@ -190,6 +201,22 @@ def parse(source: str, filename: str = "") -> Module:
                 pending_label = None
                 i += 1; continue
 
+            if kind == DirectiveKind.STRING:
+                string = rl.args[0].replace("\"", "")
+                remapped_label = string+"_"+"str_"+str(len(module.str_table))
+                dd = DataDefinition(
+                    name      = remapped_label,
+                    size      = 0,
+                    alignment = 4,
+                    string    = string,
+                    exported  = pending_label in module.global_syms,
+                    line_no   = rl.line_no,
+                )
+                module.str_table[pending_label] = remapped_label
+                module.data_defs.append(dd)
+                pending_label = None
+                i += 1; continue
+
             # .align inside a function body  →  keep as Directive node
             if kind == DirectiveKind.ALIGN and current_function:
                 d = Directive(kind=kind, args=rl.args, raw=rl.raw, line_no=rl.line_no)
@@ -212,7 +239,6 @@ def parse(source: str, filename: str = "") -> Module:
             i += 1
             continue
 
-        # ---- instruction  ---------------------------------------------------
         if rl.op:
             # A pending_label that reaches an instruction means this is a
             # function entry point.
@@ -293,7 +319,7 @@ def pass_collapse_la(module: Module):
         body = fn.body
         out  = []
         i    = 0
-        LANCHOR_LOADED = {}
+        LA_MAPPED = {}
         while i < len(body):
             node = body[i]
             if (isinstance(node, Instruction) and node.op == "lui" and i + 1 < len(body)):
@@ -307,10 +333,19 @@ def pass_collapse_la(module: Module):
                 if hi and str(hi).startswith(".LANCHOR"):
                     LANCHOR_ENTRY =  LANCHOR_MAP[hi.symbol]
                     if LANCHOR_ENTRY:
-                        LANCHOR_LOADED[LANCHOR_ENTRY] = d1
+                        LA_MAPPED[hi.symbol] = d1
                         hi.symbol = LANCHOR_ENTRY[0]
                     else:
                         hi.symbol = "UNKNOWN"
+
+                # if not a LANCHOR the maybe a str
+                elif hi and str(hi).startswith("."):
+                    str_remapped = module.str_table.get(hi.symbol)
+                    if not str_remapped:
+                        hi.symbol = "UNKNOWN"
+                    else:
+                        LA_MAPPED[hi.symbol] = d1
+                        hi.symbol = str_remapped
 
                 la = Instruction(
                     op       = "la",
@@ -352,8 +387,7 @@ def pass_collapse_la(module: Module):
             if node and isinstance(node, Instruction) and node.op == "addi":
                 if node.src(2).kind != OperandKind.REGISTER and node.src(2).kind != OperandKind.IMMEDIATE:
                     try:
-                        LANCHOR_MAP_LOOKUP = LANCHOR_MAP[node.src(2).symbol]
-                        dest_reg = LANCHOR_LOADED[LANCHOR_MAP_LOOKUP]
+                        dest_reg = LA_MAPPED.get(node.src(2).symbol)
                         if dest_reg.reg == node.dest().reg and dest_reg.reg == node.src(1).reg:
                             i+=1
                             continue

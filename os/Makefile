@@ -52,7 +52,7 @@ $(BUILD_DIR)/%.s: %.c
 $(BUILD_DIR)/all_includes.s: $(S_SRCS)
 	@mkdir -p $(BUILD_DIR)
 	@echo "; Auto-generated include list for all .s files" > $@
-	@for f in $(S_CONV_SRCS); do \
+	@for f in $(filter-out $(BUILD_DIR)/user/%,$(S_CONV_SRCS)); do \
 	    echo "#include \"$${f#$(BUILD_DIR)/}\"" >> $@; \
 	done
 
