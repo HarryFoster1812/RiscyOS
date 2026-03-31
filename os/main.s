@@ -21,10 +21,12 @@ ARCH v5
 #include "./sys/syscall_table.s"
 #include "./drivers/peripheral_table.s"
 
+; Genrated includes (C compiled)
+#include "_build/all_includes.s"
+
 ; Kernel BSS
 
 ; Kernel HEAP
-
 ; Kernel Stack
 org 0x0_3FFF
 kernel_stack_base DEFW 0x0

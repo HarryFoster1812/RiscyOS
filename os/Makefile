@@ -40,7 +40,7 @@ $(BUILD_DIR)/all_includes.s: $(S_SRCS)
 	@mkdir -p $(BUILD_DIR)
 	@echo "; Auto-generated include list for all .s files" > $@
 	@for f in $(S_SRCS); do \
-	    echo "#include \"$${f}\"" >> $@; \
+	    echo "#include \"$${f#$(BUILD_DIR)/}\"" >> $@; \
 	done
 
 # Preprocess main.s (always runs)
