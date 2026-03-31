@@ -351,13 +351,14 @@ def pass_collapse_la(module: Module):
                 continue
             if node and isinstance(node, Instruction) and node.op == "addi":
                 if node.src(2).kind != OperandKind.REGISTER and node.src(2).kind != OperandKind.IMMEDIATE:
-                    LANCHOR_MAP_LOOKUP = LANCHOR_MAP[node.src(2).symbol]
-                    if LANCHOR_MAP_LOOKUP:
+                    try:
+                        LANCHOR_MAP_LOOKUP = LANCHOR_MAP[node.src(2).symbol]
                         dest_reg = LANCHOR_LOADED[LANCHOR_MAP_LOOKUP]
                         if dest_reg.reg == node.dest().reg and dest_reg.reg == node.src(1).reg:
                             i+=1
                             continue
-
+                    except:
+                        pass
             
             out.append(node)
             i += 1
