@@ -4,6 +4,9 @@ CMD0 EQU 0
 CMD0_ARG EQU 0
 CMD0_CRC EQU 0x94
 
+IRQ_STATUS_BYTE_BIT EQU 5
+IRQ_STATUS_BLOCK_BIT EQU 6
+IRQ_STATUS_ERROR_BIT EQU 7
 
 init_sd:
 	addi sp, sp, -4
@@ -80,7 +83,7 @@ send_dummy_clocks:
 	call spi_set_cs
 	call spi_send_block
 
-	li t1, (1<<5) ; block done status bit
+	li t1, (1<<IRQ_STATUS_BLOCK_BIT) ; block done status bit
 
 	; poll until block done (IRQ)
 	1

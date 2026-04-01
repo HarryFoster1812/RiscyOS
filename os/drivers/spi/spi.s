@@ -3,18 +3,20 @@ SPI_BASE EQU 0x2_0000
 SPI_RAM_SIZE_BYTES EQU 512
 
 STRUCT
-SPI_CONTROL			WORD
-SPI_STATUS			WORD
-SPI_CONFIG			WORD
-SPI_CS					WORD
-SPI_TXDATA			WORD
-SPI_RXDATA			WORD
-SPI_BLOCK_LEN		WORD
-SPI_IRQ_ENABLE	WORD
+SPI_CONTROL			WORD ; 0x0
+SPI_STATUS			WORD ; 0x4
+SPI_CONFIG			WORD ; 0x8
+SPI_CS					WORD ; 0xC
+SPI_TXDATA			WORD ; 0x10
+SPI_RXDATA			WORD ; 0x14
+SPI_BLOCK_LEN		WORD ; 0x18
+SPI_IRQ_ENABLE	WORD ; 0x1C
 RECORD					0x200
 SPI_TX_RAM					ALIAS
 RECORD          SPI_TX_RAM+SPI_RAM_SIZE_BYTES ; 0x200 + 0x800 (2048)
 SPI_RX_RAM					ALIAS
+
+RX_VALID_BIT EQU 2
 
 spi_init:
 	addi sp, sp, -4
@@ -48,7 +50,7 @@ spi_send_byte:
 	sw a0, SPI_TXDATA[t0]
 	li t1, 0b101				; [block mode][stop][start] 
 	sw t1, SPI_CONTROL[t0]
-	li t2, (1<<1) ; rx_valid bit
+	li t2, (1<<RX_VALID_BIT) ; rx_valid bit
 
 	; poll status until rx vaild
 	1
