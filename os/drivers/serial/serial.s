@@ -106,6 +106,10 @@ fifo_pop:
 	mv a0, zero
 	ret
 
+fifo_base:
+  DEFS 10
+ALIGN 4
+
 STRUCT
 FIFO_BASE WORD ; Pointer to FIFO array
 FIFO_HEAD BYTE ; index into array

@@ -16,7 +16,7 @@ boot:
     la      sp, kernel_stack_base   ; Load address of kernel stack into stack pointer (SP)
 
     li      t0, 0x0000_1800         ; MPP mask (Machine Previous Privilege) bits 12 and 11
-    csrc    MSTATUS, t0             ; Clear MPP bits → sets next privilege level to User mode
+    csrc    MSTATUS, t0             ; Clear MPP bits sets next privilege level to User mode
 
     la      t0, mhandler            ; Load address of machine trap handler
     csrw    MTVEC, t0               ; Set trap vector base address to mhandler
@@ -38,4 +38,7 @@ boot:
     sw      t1, INT_ENABLE[t0]      ; Enable interrupt source in interrupt controller
     sw      zero, 12[t0]            ; Clear/acknowledge any pending interrupts
 
-    mret                            ; Return from machine mode → jump to MEPC (user_main) in user mode
+    call spi_init
+    call init_sd
+
+    mret                            ; Return from machine mode -> jump to MEPC (user_main) in user mode

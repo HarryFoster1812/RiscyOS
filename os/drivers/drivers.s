@@ -6,3 +6,8 @@ INT_OUT             EQU 0x8
 #include "input/buttons.s"
 #include "serial/serial.s"
 #include "timer/timer.s"
+#include "spi/sd.s"
+#include "spi/spi.s"
+
+
+#include "./external_interrupts.s"
