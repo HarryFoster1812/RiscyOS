@@ -12,7 +12,7 @@ serial_irsq_read:
     ecall_poll_serial_read_end:
     ret
 
-ecall_poll_serial_write
+ecall_poll_serial_write:
     li      t0, SERIAL_PORT
     
     ecall_poll_serial_write_loop:
@@ -23,6 +23,20 @@ ecall_poll_serial_write
         sb      a0, [t0]                            ; Write the byte to the Data register (offset 0) [3, 5]
         ret                                         ; Return to caller [6, 7]
 
+; a0 - debug string
+k_dbg_print:
+	li      t0, SERIAL_PORT
+	1
+	lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte [2, 3]
+	andi    t1, t1, 1                           ; Mask bit 0 (TxRDY) [4, 5]
+	beqz    t1, %B1
+	lb			t2, [a0]
+	beqz    t2, %F2
+	sb      t2, [t0]                            ; Write the byte to the Data register (offset 0) [3, 5]
+	addi		a0, a0, 1
+	j				%B1
+	2
+	ret                                         ; Return to caller [6, 7]
 
 ecall_poll_serial_read:
 	; Non-blocking (can return null)
