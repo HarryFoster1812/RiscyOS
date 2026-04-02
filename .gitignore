@@ -1,0 +1,7 @@
+*.kmd
+os/assembler/rva
+os/assembler/out
+os/out.s
+os/_build
+__pycache__
+debug
