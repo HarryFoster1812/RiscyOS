@@ -1,8 +1,7 @@
 *.elf
 *.kmd
-assembler/rva
-assembler/out
 out.s
 _build
 __pycache__
 debug
+rva

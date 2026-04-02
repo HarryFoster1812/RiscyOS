@@ -5,7 +5,7 @@ CC = gcc
 RISCV_CC = riscv64-unknown-elf-gcc  # your RISC-V cross-compiler
 
 # Paths
-ASSEMBLER_DIR = assembler
+ASSEMBLER_DIR = tools/assembler
 RVA_SRC = $(ASSEMBLER_DIR)/rva.c
 RVA_BIN = $(ASSEMBLER_DIR)/rva
 
@@ -63,7 +63,7 @@ convert: compileC
 ifeq ($(SKIP_CONVERT),0)
 	@for f in $(S_SRCS); do \
 	    echo "Converting $$f..."; \
-	    python3 toolchain/convert_generated_asm.py "$$f"; \
+	    python3 tools/gas-to-jim/convert_generated_asm.py "$$f"; \
 	done
 else
 	@echo "Skipping conversion step"
