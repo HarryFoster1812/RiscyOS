@@ -8,7 +8,7 @@ IRQ_STATUS_BYTE_BIT EQU 5
 IRQ_STATUS_BLOCK_BIT EQU 6
 IRQ_STATUS_ERROR_BIT EQU 7
 
-init_sd:
+sd_init:
 	addi sp, sp, -4
 	sw ra, [sp]
 	

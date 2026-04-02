@@ -347,6 +347,10 @@ def pass_collapse_la(module: Module):
                         LA_MAPPED[hi.symbol] = d1
                         hi.symbol = str_remapped
 
+                # it might be a external address load
+                else:
+                    LA_MAPPED[hi.symbol] = d1
+
                 la = Instruction(
                     op       = "la",
                     operands = [

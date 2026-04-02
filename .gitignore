@@ -1,7 +1,8 @@
+*.elf
 *.kmd
-os/assembler/rva
-os/assembler/out
-os/out.s
-os/_build
+assembler/rva
+assembler/out
+out.s
+_build
 __pycache__
 debug

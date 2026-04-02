@@ -1,0 +1,7 @@
+#pragma once
+ALLOC_ARRAY_BYTE_SIZE EQU 512
+ALLOC_WORD_SIZE EQU ALLOC_ARRAY_BYTE_SIZE/4 
+MIN_BLOCK EQU 256*1024/(ALLOC_ARRAY_BYTE_SIZE*8) ; this is what each bit in the alloc array will represent
+
+ALLOC_FREE EQU 0 
+ALLOC_USED EQU 1 

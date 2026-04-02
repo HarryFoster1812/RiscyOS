@@ -1,10 +1,3 @@
-char* a = "Hello world";
-
-
-void user_main(){
-
-}
-// only
 typedef struct {
 	// FILESYSTEM INFO PROPER
 	unsigned char sectorsPerCluster;

@@ -1,3 +1,6 @@
 .PHONY: run-rva
 run-rva:
-	./rva $(FORMAT) $(abspath $(OUT_DIR)) ../$(notdir $(OUT_PRE))
+	touch $(abspath $(OUT_DIR))/main.elf
+	touch $(abspath $(OUT_DIR))/main.kmd
+	./rva -e $(abspath $(OUT_DIR))/main.elf ../$(notdir $(OUT_PRE))
+	./rva -lk $(abspath $(OUT_DIR))/main.kmd ../$(notdir $(OUT_PRE))

@@ -38,7 +38,10 @@ boot:
     sw      t1, INT_ENABLE[t0]      ; Enable interrupt source in interrupt controller
     sw      zero, 12[t0]            ; Clear/acknowledge any pending interrupts
 
+		call kheap_init
+		call ualloc_init
+
     call spi_init
-    call init_sd
+    call sd_init
 
     mret                            ; Return from machine mode -> jump to MEPC (user_main) in user mode

@@ -13,9 +13,6 @@ MAIN_SRC = main.s
 OUT_PRE = out.s
 OUT_DIR = out
 
-# Output format: -lk (kmd) or -e (ELF)
-FORMAT ?= -lk
-
 # Build folder for compiled assembly
 BUILD_DIR = _build
 
@@ -81,9 +78,12 @@ preprocess: convert $(BUILD_DIR)/all_includes.s
 /g' > $(OUT_PRE)
 
 # Run assembler (must run from assembler dir)
-assemble: $(RVA_BIN) preprocess
+assemble: preprocess
 	@mkdir -p $(OUT_DIR)
-	cd $(ASSEMBLER_DIR) && ./rva $(FORMAT) $(abspath ../$(OUT_DIR)) ../$(notdir $(OUT_PRE))
+	$(MAKE) -C $(ASSEMBLER_DIR) run-rva \
+		OUT_DIR=$(abspath $(OUT_DIR)) \
+		OUT_PRE=$(abspath $(OUT_PRE)) \
+		FORMAT=$(FORMAT)
 
 # Clean generated files
 .PHONY: clean
