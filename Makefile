@@ -20,7 +20,7 @@ BUILD_DIR = _build
 SKIP_CONVERT ?= 0
 
 # All C sources in kernel, drivers, and user
-C_SRCS := $(shell find kernel drivers user -name '*.c')
+C_SRCS := $(shell find kernel drivers sys arch boot -name '*.c')
 S_SRCS := $(patsubst %.c,$(BUILD_DIR)/%.s,$(C_SRCS))
 S_CONV_SRCS := $(patsubst %.c,$(BUILD_DIR)/%.out.s,$(C_SRCS))
 

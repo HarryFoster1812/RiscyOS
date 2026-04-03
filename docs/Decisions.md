@@ -8,3 +8,16 @@ During a context switch, it recives the trap frame and a pid target (which is a 
 it will overwrite the trapfram in the current process pcb and also save other things such as the MEPC and MSTATUS ect and then overwrite the trap frame passed into it with the target context
 
 This is not the most ideal thing to do. In the linux kernel, each running process has it own kernel stack and the context switch just switches the kernel stack pointer which is easier to do but having seperate kernel stacks is not feasble in memory constraints.
+
+I decided to make a internal kmalloc. This will just be a simplistic header based heap. The main reason I did this is because I want to have dynamicly created items like PCB's and file handlers and I dont like having a fixed pool or any limitations. I know in the long run having a fixed pool is better and will save time and space but I like the dynamic approach.
+
+Another thing i have decided is to create a slab-like allocator for the things like pcb and file handles so i can get the speed of O(1) (amortized) allocation.
+
+For user memory I am going to be using a flat bit field allocator, I origonally planned for a buddy allocator but that would take up twice as much memory and for 512 bytes (4096 bits) the time to space saving is really not worth double the size
+
+My plan is for on execve -> find program -> give it to the linker -> try to allocate memory -> if fails then check reason -> is not enough try to swap out a program?
+On successful allocate -> parse program and modify all non-relocateable code (should be statically linked to a small libc)
+
+Each program will be text + bss/static + stack (4KiB) which is also heap space where heap is managed by sbrk which is just going to be (check sp if current brk + inc >= current sp then deniy else allow) and is just also going to be a header based heap or maybe a more complex idk yet
+
+Ok so how will swap space work? If we have a program that has non-relocateable code and we change it when linking/loading then when we swap it out it will then be in the wrong place

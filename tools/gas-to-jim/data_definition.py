@@ -1,5 +1,14 @@
 from dataclasses import dataclass
 from typing import Optional
+from enum import Enum, auto
+
+class DataDefinitionType(Enum):
+    STRING   = auto()
+    WORD     = auto()
+    HALFWORD     = auto()
+    DOUBLEWORD   = auto()
+    SPACE     = auto()
+
 
 @dataclass
 class DataDefinition:

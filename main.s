@@ -29,13 +29,19 @@ kernel_stack_size EQU 600
 #include "_build/all_includes.s"
 
 ; Kernel BSS
+; I know I have limited space but naming the kernel is very important
+kernel_name DEFB "Sleep-Deprived Squirrel\0"
+
+; pointer to the current pcb/process that is executing
+current_pcb DEFW 0x0
+
 #include "./kernel/memory/ualloc_array_def.s"
 
 ; Kernel HEAP
-kernel_heap_start defb 0
+kernel_heap_start DEFB 0
 ; Kernel Stack
 org 0x0_3FFF-kernel_stack_size-1
-kernel_heap_end defb 0
+kernel_heap_end DEFB 0
 
 org 0x0_3FFF
 kernel_stack_base:

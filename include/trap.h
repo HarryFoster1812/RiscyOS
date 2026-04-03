@@ -1,0 +1,33 @@
+#pragma once
+typedef struct{
+	int TF_RA;
+	int TF_GP;
+	int TF_TP;
+	int TF_T0;
+	int TF_T1;
+	int TF_T2;
+	int TF_S0;
+	int TF_S1;
+	int TF_A0;
+	int TF_A1;
+	int TF_A2;
+	int TF_A3;
+	int TF_A4;
+	int TF_A5;
+	int TF_A6;
+	int TF_A7;
+	int TF_S2;
+	int TF_S3;
+	int TF_S4;
+	int TF_S5;
+	int TF_S6;
+	int TF_S7;
+	int TF_S8;
+	int TF_S9;
+	int TF_S10;
+	int TF_S11;
+	int TF_T3;
+	int TF_T4;
+	int TF_T5;
+	int TF_T6;
+} trap_frame_t;

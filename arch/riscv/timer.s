@@ -17,4 +17,5 @@ timer_interrupt:
     sw      t3, 0[t6]               ; write low
     sw      t2, 4[t6]               ; write high
 
-    mret
+		; need to decide
+    ret

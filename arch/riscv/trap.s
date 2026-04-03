@@ -72,7 +72,7 @@ mhandler:
     lw t6,	TF_T6[sp]
 
     addi sp, sp, TRAP_FRAME_SIZE
-	csrrw   sp, MSCRATCH, sp  ; swap user and machine stack pointer
+		csrrw   sp, MSCRATCH, sp  ; swap user and machine stack pointer
     mret
 
 
