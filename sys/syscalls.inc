@@ -3,8 +3,8 @@
 
 /*  Generate the index EQUs */
 #define X(name, func) \
-    name##_INDEX   EQU (ECALL_HANDLER_##name - ECALL_TABLE_START)/4 __NL__
+    .equ name##_INDEX , (ECALL_HANDLER_##name - ECALL_TABLE_START)/4 __NL__
 ECALL_TABLE_LIST
 #undef X
 
-ECALL_MAX_INDEX  EQU (ECALL_TABLE_END - ECALL_TABLE_START)/4
+.equ ECALL_MAX_INDEX, (ECALL_TABLE_END - ECALL_TABLE_START)/4

@@ -3,7 +3,7 @@
 ; start:    4_0000
 ; end:      8_0000
 
-USER_RAM_START EQU 0x4_0000
+.equ USER_RAM_START 0x40000
 
 ; 1 = USED 
 ; 0 = FREE
@@ -46,7 +46,7 @@ ualloc_init:
 	add t0, t0, t1
 	1
 	beqz t1, %F2
-	sw zero, [t0]
+	sw zero, (t0)
 	addi t1, t1, -1
 	j %B1
 	2
@@ -57,7 +57,7 @@ ualloc_init:
 ; a0 bytes to allocate
 ualloc:
 		addi sp, sp, -4
-		sw ra, [sp]
+		sw ra, (sp)
 
     beqz a0, %F2
     call round_next_power_of_two
@@ -75,14 +75,14 @@ ualloc:
 		2 ; alloc fail
     li a0, 1 ; 1 - called ualloc with null
 		3
-		lw ra, [sp]
+		lw ra, (sp)
 		addi sp, sp, 4
     ret
 
 ; void ufree(void* addr, int size)
 ufree:
 		addi sp, sp, -4
-		sw ra, [sp]
+		sw ra, (sp)
 
     beqz a1, %B2 ; jump to alloc fail above (save space)
     call round_next_power_of_two

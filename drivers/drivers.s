@@ -1,6 +1,6 @@
-INT_CONTROLLER_BASE EQU 0x10400
-INT_ENABLE          EQU 0x4
-INT_OUT             EQU 0x8
+.equ INT_CONTROLLER_BASE , 0x10400
+.equ INT_ENABLE          , 0x4
+.equ INT_OUT             , 0x8
 
 #include "display/lcd.s"
 #include "input/buttons.s"

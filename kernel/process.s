@@ -5,7 +5,7 @@ ecall_getpid:
 	lw t0, current_pcb 
 	beqz t0, %F1
 
-	lw a0, PCB_PID[t0]
+	lw a0, PCB_PID(t0)
 	j %F2
 
 	1
@@ -27,9 +27,9 @@ ecall_getpid:
 
 ecall_execv:
 	addi sp, sp, -4 
-	sw ra, [sp]
+	sw ra, (sp)
 
-	lw ra, [sp]
+	lw ra, (sp)
 	addi sp, sp, 4
 	ret
 

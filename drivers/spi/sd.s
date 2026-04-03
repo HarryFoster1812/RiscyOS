@@ -1,16 +1,16 @@
 ; https://onlinedocs.microchip.com/oxy/GUID-F9FE1ABC-D4DD-4988-87CE-2AFD74DEA334-en-US-3/GUID-48879CB2-9C60-4279-8B98-E17C499B12AF.html
 ; http://rjhcoding.com/avrc-sd-interface-1.php
-CMD0 EQU 0
-CMD0_ARG EQU 0
-CMD0_CRC EQU 0x94
+.equ CMD0,  0
+.equ CMD0_ARG,  0
+.equ CMD0_CRC,  0x94
 
-IRQ_STATUS_BYTE_BIT EQU 5
-IRQ_STATUS_BLOCK_BIT EQU 6
-IRQ_STATUS_ERROR_BIT EQU 7
+.equ IRQ_STATUS_BYTE_BIT,  5
+.equ IRQ_STATUS_BLOCK_BIT,  6
+.equ IRQ_STATUS_ERROR_BIT,  7
 
 sd_init:
 	addi sp, sp, -4
-	sw ra, [sp]
+	sw ra, (sp)
 	
 	call send_dummy_clocks
 	; send command CMD0
@@ -32,16 +32,16 @@ sd_init:
 	call spi_set_cs
 
 
-	lw ra, [sp]
+	lw ra, (sp)
 	addi sp, sp, 4
 	ret
 
 sd_readRes1:
 	addi sp, sp, -16
-	sw s0, [sp]
-	sw s1, 4[sp]
-	sw s2, 8[sp]
-	sw ra, 12[sp]
+	sw s0, (sp)
+	sw s1, 4(sp)
+	sw s2, 8(sp)
+	sw ra, 12(sp)
 
 	li a0, 0xFF
 	mv s0, a0
@@ -54,25 +54,25 @@ sd_readRes1:
 	addi s1, s1, 1
 	blt s1, s2, %B1
 
-	lw s0, [sp]
-	lw s1, 4[sp]
-	lw s2, 8[sp]
-	lw ra, 12[sp]
+	lw s0, (sp)
+	lw s1, 4(sp)
+	lw s2, 8(sp)
+	lw ra, 12(sp)
 	addi sp, sp, 16
 	ret
 
 send_dummy_clocks:
 	addi sp, sp, -4
-	sw ra, [sp]
+	sw ra, (sp)
 	; set up SPI for block transfer of 10 bytes
 	li a0, 10
 	call spi_set_block_len
 	; load 10 FF bytes into TX_RAM
 	li t0, SPI_BASE
 	addi t1, zero, -1
-	sw t1, SPI_TX_RAM[t0]			; 4 bytes
-	sw t1, (SPI_TX_RAM+4)[t0] ; 8 bytes
-	sw t1, (SPI_TX_RAM+8)[t0] ; 12 bytes
+	sw t1, SPI_TX_RAM(t0)			; 4 bytes
+	sw t1, (SPI_TX_RAM+4)(t0) ; 8 bytes
+	sw t1, (SPI_TX_RAM+8)(t0) ; 12 bytes
 	
 	; set clock divisor to be in the slow range
 	li a0, 80 ; 250 Khz 
@@ -87,14 +87,14 @@ send_dummy_clocks:
 
 	; poll until block done (IRQ)
 	1
-	lw t2, SPI_STATUS[t0]
+	lw t2, SPI_STATUS(t0)
 	and t3, t2, t1
 	beqz t3, %B1
 
 	; block has finished
-	sw zero, SPI_STATUS[t0] ; clear IRQ
+	sw zero, SPI_STATUS(t0) ; clear IRQ
 
-	lw ra, [sp]
+	lw ra, (sp)
 	addi sp, sp, 4
 	ret
 
@@ -107,7 +107,7 @@ ret
 
 sd_send_command_crc:
 	addi sp, sp, -4
-	sw ra, [sp]
+	sw ra, (sp)
 
 ; all sd commands are in the format:
 ; 47		- 0 - start bit
@@ -143,7 +143,7 @@ li t1, 1
 or a0, a3, t1
 call spi_send_byte
 
-	lw ra, [sp]
+	lw ra, (sp)
 	addi sp, sp, 4
 ret
 

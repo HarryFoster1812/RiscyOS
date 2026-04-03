@@ -20,7 +20,7 @@ poll_input
 ; Registers
 handle_input
     subi    sp, sp, 4
-    sw      ra, [sp]
+    sw      ra, (sp)
     
     ; check if a0 has a value
     beqz    a0, handle_input_end
@@ -30,7 +30,7 @@ handle_input
     jal printChar                       ; write char to the lcd display
 
     handle_input_end
-    lw      ra, [sp]
+    lw      ra, (sp)
     addi    sp, sp, 4
     ret
     
