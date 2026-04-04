@@ -10,6 +10,8 @@ kernel_stack_size EQU 600
 #include "./sys/ecall_handler.s"
 
 ;; Scheduler
+#include "./kernel/process.s"
+#include "./kernel/scheduler.s"
 
 ;; File system
 

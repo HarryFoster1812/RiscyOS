@@ -8,6 +8,8 @@
 ; yield
 ; void ecall_yield(void)
 
+; this is the top level schedule that is called by timer interrupt
+schedule:
 
 ; pcb_t* schedule_next();
 ; returns null on error (no availible process to schedule)

@@ -16,6 +16,8 @@ ecall_getpid:
 
 ; fork
 ; int fork(void);
+fork:
+ret
 
 ; execv
 ; 0x0 - _crt0 text (.text + .data + .bss)
