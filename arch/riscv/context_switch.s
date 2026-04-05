@@ -42,6 +42,10 @@ context_switch:
 	sw t1, PCB_MSTATUS[a2]
 	sw t2, PCB_MSCRATCH[a2]
 
+	; switch the MMU
+	lw a0, PCB_PENTRY[a1]
+	call mmu_set_offset
+
 	lw ra, 12[sp]
 	addi sp, sp, 16
 	ret

@@ -36,7 +36,7 @@ $(BUILD_DIR)/%.s: %.c
 	@mkdir -p $(dir $@)
 	# -Oz optimise aggressively for size
 	$(RISCV_CC) -Oz -S -ffreestanding -nostdlib \
-			-march=rv32i -mabi=ilp32 \
+			-march=rv32im_zicsr -mabi=ilp32 \
 			-fno-pic \
 			-mno-relax \
 			-fno-asynchronous-unwind-tables \

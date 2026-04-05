@@ -8,6 +8,7 @@ INT_OUT             EQU 0x8
 #include "timer/timer.s"
 #include "spi/sd.s"
 #include "spi/spi.s"
+#include "mmu/mmu.s"
 
 
 #include "./external_interrupts.s"

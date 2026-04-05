@@ -17,6 +17,7 @@ RECORD          SPI_TX_RAM+SPI_RAM_SIZE_BYTES ; 0x200 + 0x800 (2048)
 SPI_RX_RAM					ALIAS
 
 IRQ_STATUS_BYTE_BIT EQU 5
+IRQ_STATUS_BLOCK_BIT EQU 6
 
 spi_init:
 	addi sp, sp, -4
@@ -48,7 +49,7 @@ spi_init:
 spi_send_byte:
 	li t0, SPI_BASE
 	sw a0, SPI_TXDATA[t0]
-	li t1, 0b101				; [block mode][stop][start] 
+	li t1, 0b001				; [block mode][stop][start] 
 	sw t1, SPI_CONTROL[t0]
 ;	li t2, (1<<RX_VALID_BIT) ; rx_valid bit NOTE: this would work but bennett reads rx so it clears the flag
 	li t2, (1<<IRQ_STATUS_BYTE_BIT)
@@ -66,6 +67,22 @@ spi_send_block:
 	li t0, SPI_BASE
 	li t1, 0b101				; [block mode][stop][start] 
 	sw t1, SPI_CONTROL[t0]
+	ret
+
+
+spi_send_block_blocking:
+	li t0, SPI_BASE
+	li t1, 0b101				; [block mode][stop][start] 
+	sw t1, SPI_CONTROL[t0]
+	li t2, (1<<IRQ_STATUS_BLOCK_BIT)
+
+	; poll status until rx vaild
+	1
+	lw t3, SPI_STATUS[t0]
+	and t3, t3, t2 
+	beqz t3, %B1
+	; rx valid high
+	lw a0, SPI_RXDATA[t0]
 	ret
 
 spi_set_block_len:

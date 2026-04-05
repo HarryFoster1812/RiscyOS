@@ -2,6 +2,7 @@ MMU_BASE EQU 0x0001_0900
 STRUCT
 MMU_OFFSET WORD
 MMU_CTRL WORD
+MMU_STATUS WORD
 
 USER_RAM_BASE EQU 0x0004_0000
 
@@ -14,6 +15,7 @@ mmu_init:
 	sw t1, MMU_STATUS[t0]
 
 
+; a0 - new offset
 mmu_set_offset:
 	li t0, MMU_BASE
 	; set base

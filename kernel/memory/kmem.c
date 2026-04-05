@@ -1,5 +1,4 @@
-typedef int uint32_t;
-typedef char uint8_t;
+#include "../../include/types.h"
 
 typedef struct heap_header {
     uint32_t size_and_flags;

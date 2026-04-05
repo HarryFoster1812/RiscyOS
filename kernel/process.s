@@ -16,7 +16,15 @@ ecall_getpid:
 
 ; fork
 ; int fork(void);
+; failure = -1
 fork:
+; allocate rodata+data+bss+heap+stack
+; make a new pcb
+; IF NOTHING FAILS THEN
+; get a new proc_id
+; set a0 - proc_id
+; set a0 of new pcb trap to be 0
+; modify pcb chain (maybe make a remove pcb func)
 ret
 
 ; execv
@@ -34,5 +42,4 @@ ecall_execv:
 	lw ra, [sp]
 	addi sp, sp, 4
 	ret
-
 
