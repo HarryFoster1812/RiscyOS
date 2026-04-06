@@ -1,4 +1,4 @@
-#include "../../include/types.h"
+#include <types.h>
 
 typedef struct heap_header {
     uint32_t size_and_flags;

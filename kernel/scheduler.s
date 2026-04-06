@@ -1,4 +1,4 @@
-#include "../include/process.inc"
+#include <process.inc>
 ; get pid
 ; int ecall_getpid(void)
 

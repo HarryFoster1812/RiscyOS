@@ -1,15 +1,15 @@
 typedef struct {
 	// FILESYSTEM INFO PROPER
-	unsigned char sectorsPerCluster;
 	unsigned int firstDataSector;
 	unsigned int totalSectors;
 	unsigned short reservedSectors;
+	unsigned char sectorsPerCluster;
 } FSMetadata;
 
 typedef struct {
 	unsigned int currentSector;
-	unsigned char sectorFlags;
 	unsigned int rootDirectorySize;
+	unsigned char sectorFlags;
 }FSCurrentInfo;
 
 

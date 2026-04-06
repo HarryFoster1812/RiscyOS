@@ -7,4 +7,6 @@ typedef int int32_t;
 typedef short int16_t;
 typedef char int8_t;
 
+typedef unsigned int uintptr_t;
+
 #define NULL 0

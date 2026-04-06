@@ -1,4 +1,4 @@
-#include "../include/process.inc"
+#include <process.inc>
 ; int ecall_getpid(trap_frame_t* tf)
 ; returns -1 on failure
 ecall_getpid:
@@ -20,6 +20,7 @@ ecall_getpid:
 fork:
 ; allocate rodata+data+bss+heap+stack
 ; make a new pcb
+la pcb_slab_head
 ; IF NOTHING FAILS THEN
 ; get a new proc_id
 ; set a0 - proc_id

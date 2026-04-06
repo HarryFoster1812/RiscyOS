@@ -43,6 +43,7 @@ $(BUILD_DIR)/%.s: %.c
 			-fno-exceptions \
 			-fno-ident \
 			-fverbose-asm \
+			-I include \
 			$< -o $@
 
 # Generate include aggregator for all generated .s files
@@ -73,7 +74,7 @@ endif
 .PHONY: preprocess
 preprocess: convert $(BUILD_DIR)/all_includes.s
 	@echo "Preprocessing main.s..."
-	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) | \
+	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) -I include | \
 	sed 's/__NL__/\
 /g' > $(OUT_PRE)
 
