@@ -20,7 +20,7 @@ ecall_getpid:
 fork:
 ; allocate rodata+data+bss+heap+stack
 ; make a new pcb
-la pcb_slab_head
+la t0, pcb_slab_head
 ; IF NOTHING FAILS THEN
 ; get a new proc_id
 ; set a0 - proc_id
@@ -30,11 +30,11 @@ ret
 
 ; execv
 ; 0x0 - _crt0 text (.text + .data + .bss)
-; heap_base ↑
+; heap_base 
 ;   argv strings
 ;   argv array (pointers)
-; heap_ptr ↑
-; stack ↓
+; heap_ptr 
+; stack 
 
 ecall_execv:
 	addi sp, sp, -4 

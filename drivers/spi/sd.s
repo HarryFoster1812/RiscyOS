@@ -8,6 +8,10 @@
     li a0, 1 __NL__         \
     call spi_set_cs
 
+#define SPI_TRANSFER(x) \
+    li a0, x __NL__ \
+    call spi_send_byte
+
 
 CMD0			EQU 0
 CMD0_ARG	EQU 0
@@ -56,7 +60,7 @@ SD_STATE BYTE
 SD_INFO_T_SIZE ALIAS
 
 ; SD_RES7
-SD_RES7_T_SIZE EQU 5
+SD_RES7_T_SIZE EQU 5 +3 ; 3 bytes of padding
 
 ALIGN 4
 sd_init:
@@ -64,11 +68,19 @@ sd_init:
 
 	sw ra, SD_RES7_T_SIZE[sp]
 	
+  li a0, 0xAB
+  call spi_send_byte
+
+  li a0, 0x13
+  call spi_send_byte
+
 	call send_dummy_clocks
 	; send command CMD0
 
 	; enable sd
+  SPI_TRANSFER(0xFF)
 	SD_CS_ENABLE()
+  SPI_TRANSFER(0xFF)
 	
 	li a0, CMD0
 	li a1, CMD0_ARG
@@ -106,6 +118,30 @@ sd_readRes1:
 	sw s1, 4[sp]
 	sw s2, 8[sp]
 	sw ra, 12[sp]
+
+;;	li t0, SPI_BASE
+;	addi t1, zero, -1
+;	sw t1, SPI_TX_RAM[t0]			; 4 bytes
+;	sw t1, (SPI_TX_RAM+4)[t0] ; 8 bytes
+;	sw t1, (SPI_TX_RAM+8)[t0] ; 12 bytes
+;	sw t1, (SPI_TX_RAM+12)[t0] ; 12 bytes
+;	sw t1, (SPI_TX_RAM+16)[t0] 
+;	sw t1, (SPI_TX_RAM+20)[t0]
+;	sw t1, (SPI_TX_RAM+24)[t0] 
+;	sw t1, (SPI_TX_RAM+28)[t0] 
+;	sw t1, (SPI_TX_RAM+32)[t0] 
+;	sw t1, (SPI_TX_RAM+36)[t0] 
+;	sw t1, (SPI_TX_RAM+40)[t0] 
+;	sw t1, (SPI_TX_RAM+44)[t0]
+;	sw t1, (SPI_TX_RAM+48)[t0]
+;	sw t1, (SPI_TX_RAM+52)[t0]
+;	sw t1, (SPI_TX_RAM+56)[t0]
+;	sw t1, (SPI_TX_RAM+60)[t0]
+;
+  li a0, 512
+  call spi_set_block_len
+  call spi_send_block_blocking
+
 
 	li a0, 0xFF
 	mv s0, a0
@@ -183,9 +219,11 @@ send_dummy_clocks:
 	li a0, 80 ; 250 Khz 
 	call spi_set_clock_div
 
-	; set cs to high
-	li a0, 1
-	call spi_set_cs
+  SD_CS_DISABLE()
+
+  la a0, 10000
+  call DELAY
+
 	call spi_send_block
 
 	li t1, (1<<IRQ_STATUS_BLOCK_BIT) ; block done status bit
@@ -198,6 +236,9 @@ send_dummy_clocks:
 
 	; block has finished
 	sw zero, SPI_STATUS[t0] ; clear IRQ
+
+  SD_CS_DISABLE()
+  SPI_TRANSFER(0xFF)
 
 	lw ra, [sp]
 	addi sp, sp, 4

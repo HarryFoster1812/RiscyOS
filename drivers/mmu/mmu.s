@@ -12,7 +12,7 @@ mmu_init:
 
 	; Enable address translation (simplistic virt+base)
 	li t1, 1
-	sw t1, MMU_STATUS[t0]
+	sw t1, MMU_CTRL[t0]
 
 
 ; a0 - new offset

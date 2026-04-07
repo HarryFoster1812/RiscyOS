@@ -1,4 +1,5 @@
 SPI_BASE EQU 0x2_0000
+SYS_PIO EQU 0x1_0700
 
 SPI_RAM_SIZE_BYTES EQU 512
 
@@ -24,6 +25,10 @@ spi_init:
 	sw ra, [sp]
 	; make sure tx is setup
 	li t0, SPI_BASE
+
+  li t2, SYS_PIO
+  li t3, 0xFF
+  sw t3, 4[t2]
 	
 	; initialise TX with dummy byte FF
 	addi t1, zero, -1
@@ -40,6 +45,9 @@ spi_init:
 	mv a0, zero
 	call spi_set_mode
 	
+	lw zero, SPI_RXDATA[t0] ; clear the status bit
+	sw zero, SPI_STATUS[t0] ; clear any IRQ
+
 	lw ra, [sp]
 	addi sp, sp, 4
 	ret
@@ -61,6 +69,7 @@ spi_send_byte:
 	beqz t3, %B1
 	; rx valid high
 	lw a0, SPI_RXDATA[t0]
+	sw zero, SPI_STATUS[t0] ; clear IRQ
 	ret 
 
 spi_send_block:
@@ -83,6 +92,7 @@ spi_send_block_blocking:
 	beqz t3, %B1
 	; rx valid high
 	lw a0, SPI_RXDATA[t0]
+	sw zero, SPI_STATUS[t0] ; clear IRQ
 	ret
 
 spi_set_block_len:
