@@ -104,7 +104,7 @@ spi_set_block_len:
 ; a0 - 1 high
 spi_set_cs:
 	li t0, SPI_BASE
-	sw t1, SPI_CS[t0]
+	sw a0, SPI_CS[t0]
 	ret
 
 ; CHPOL - bit 0 CHPA - bit 1

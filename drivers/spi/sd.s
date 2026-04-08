@@ -119,24 +119,6 @@ sd_readRes1:
 	sw s2, 8[sp]
 	sw ra, 12[sp]
 
-;;	li t0, SPI_BASE
-;	addi t1, zero, -1
-;	sw t1, SPI_TX_RAM[t0]			; 4 bytes
-;	sw t1, (SPI_TX_RAM+4)[t0] ; 8 bytes
-;	sw t1, (SPI_TX_RAM+8)[t0] ; 12 bytes
-;	sw t1, (SPI_TX_RAM+12)[t0] ; 12 bytes
-;	sw t1, (SPI_TX_RAM+16)[t0] 
-;	sw t1, (SPI_TX_RAM+20)[t0]
-;	sw t1, (SPI_TX_RAM+24)[t0] 
-;	sw t1, (SPI_TX_RAM+28)[t0] 
-;	sw t1, (SPI_TX_RAM+32)[t0] 
-;	sw t1, (SPI_TX_RAM+36)[t0] 
-;	sw t1, (SPI_TX_RAM+40)[t0] 
-;	sw t1, (SPI_TX_RAM+44)[t0]
-;	sw t1, (SPI_TX_RAM+48)[t0]
-;	sw t1, (SPI_TX_RAM+52)[t0]
-;	sw t1, (SPI_TX_RAM+56)[t0]
-;	sw t1, (SPI_TX_RAM+60)[t0]
 ;
   li a0, 512
   call spi_set_block_len
@@ -286,7 +268,7 @@ srl a0, a1, t1
 call spi_send_byte
 
 li t1, 1
-or a0, a3, t1
+or a0, a2, t1
 call spi_send_byte
 
 	lw ra, [sp]
