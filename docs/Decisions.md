@@ -21,3 +21,10 @@ On successful allocate -> parse program and modify all non-relocateable code (sh
 Each program will be text + bss/static + stack (4KiB) which is also heap space where heap is managed by sbrk which is just going to be (check sp if current brk + inc >= current sp then deniy else allow) and is just also going to be a header based heap or maybe a more complex idk yet
 
 Ok so how will swap space work? If we have a program that has non-relocateable code and we change it when linking/loading then when we swap it out it will then be in the wrong place
+
+I added a very basic mmu (and i need to make it better) but for now the mmu is just a base offset so vaddress + offset = physical address (which is only active during user mode)
+I plan to expand this so that there are 4 mmu registers (instruction base + limit, data base + limit) this should allow me to get individual process protection and it will let me use a very bad version of shared text sections so when a process forks it will be able to share the parent text section but have a different data section
+
+Yesterday I accedentally swapped VCC and ground of the SD SPI breakout board and it killed my sd card but the board seemed fine. I went out and bought another sd card (18 quid) and then spent the rest of the day bent over a oscilliscope trying to debug the signals. Now i am home, i just tested it and maybe the problem is the board as well, i think i might of killed both the board and the sd although the new one is not killed when i plug it in. Anyway i have just bought more boards and hopefully they work
+
+I think I need to make a mini polarity proctection circuit but I have no components 

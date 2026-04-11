@@ -1,0 +1,3 @@
+[submodule "user/RiscyLibc"]
+	path = user/RiscyLibc
+	url = git@github.com:HarryFoster1812/RiscyLibc.git

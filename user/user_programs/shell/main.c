@@ -89,7 +89,7 @@ int handle_builtin(char *args[]) {
     return 0; // not a builtin
 }
 
-int main(void) {
+int main() {
     char input[MAX_INPUT];
     char *args[MAX_ARGS];
 

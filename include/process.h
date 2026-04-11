@@ -19,7 +19,17 @@ typedef struct {
     void* next;
 
     char* pname;
-    void* pentry;
-    int psize;
+
+    void* brk; // current process brk
+
+    void* pentry; // this is text section base offset
+    int ptext_size; // this is used as text section limit
+
+    void* pdata_start; // this is the .rodata section and is used for data MMU offset
+    void* heap_start;  // pdata_start -> heap_start = rodata + data + bss
+    
+    // when forking allocate  (heap_start-pdata_start)+STACK_SIZE 
+    // copy pdata_start - pdata_start+allocate_size
+    // copy pentry and ptext_size (this is shared region)
 
 } pcb_t;
