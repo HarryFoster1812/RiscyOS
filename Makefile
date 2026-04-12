@@ -2,7 +2,9 @@
 
 # Compiler
 CC = gcc
-RISCV_CC = riscv64-unknown-elf-gcc  # your RISC-V cross-compiler
+
+RISCV_PREFIX ?= riscv64-unknown-elf
+RISCV_CC = $(RISCV_PREFIX)-gcc  # your RISC-V cross-compiler
 
 # Paths
 ASSEMBLER_DIR = tools/assembler
