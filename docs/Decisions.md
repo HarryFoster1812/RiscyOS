@@ -28,3 +28,18 @@ I plan to expand this so that there are 4 mmu registers (instruction base + limi
 Yesterday I accedentally swapped VCC and ground of the SD SPI breakout board and it killed my sd card but the board seemed fine. I went out and bought another sd card (18 quid) and then spent the rest of the day bent over a oscilliscope trying to debug the signals. Now i am home, i just tested it and maybe the problem is the board as well, i think i might of killed both the board and the sd although the new one is not killed when i plug it in. Anyway i have just bought more boards and hopefully they work
 
 I think I need to make a mini polarity proctection circuit but I have no components 
+
+The new boards just came i bought 3 of them so at least one of them work, I will go to uni on monday and solder them up
+
+Ok I just modified the MMU and i added 4 more registers:
+- IMMU Base
+- IMMU Limit
+- DMMU Base
+- DMMU Limit
+- DMMU Virtual Start
+
+And I modified the logic to do target_address - virtual_start + base = physical
+It should fault on: target_address < virtual start or (target_address-virtual + base >= physical)
+NOTE: the >= so i need to make sure the last word is not accessable
+
+The main reason for the DMMU virt start is because my origonal plan was just base + offset dmmu which is bad because say the data section was from 0x40_100 to 0x40_200 then for my base to work i would have to set the base to be 0x40_000 for all the addresses to align up but this exposes a vaulnerabliltiy because if i try to write to 0x90 it will work but it should not be able to since it is out side of the data section and could potentially modify the text section. 
