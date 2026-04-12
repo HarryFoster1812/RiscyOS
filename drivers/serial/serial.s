@@ -1,42 +1,50 @@
+#include <fifo.inc>
 SERIAL_PORT             EQU     0x1_0500
 SERIAL_CONTROL_OFFSET   EQU     0x4
 
+// plan have tasks
+// so serial read  -> check task head
+// if there is a task then read into task struct which tells which process is waiting
+// read is first come first serve so proc 1 read ou
 
-serial_irsq_read:
+irsq_serial_read:
     mv      a0, zero
     li      t0, SERIAL_PORT
     lb      t1, SERIAL_CONTROL_OFFSET[t0]           ; read control byte
     andi    t1, t1, 2                               ; 
     beqz    t1, ecall_poll_serial_read_end          ; check if the Receiver ready bit (RxRDY) is high
     lb      a0, [t0]                                ; read  byte from serial
-    ecall_poll_serial_read_end:
+    ; store it in fifo out 
+    ; check if byte is '\n'? if so then invoke scheduler read finish?
+    irsq_serial_read_end:
     ret
 
-ecall_poll_serial_write:
-    li      t0, SERIAL_PORT
+; a0 - char char_to_write
+irsq_serial_write:
+    li t0, SERIAL_PORT
     
     ecall_poll_serial_write_loop:
-        lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte [2, 3]
-        andi    t1, t1, 1                           ; Mask bit 0 (TxRDY) [4, 5]
-        beqz    t1, ecall_poll_serial_write_loop    ; If 0, transmitter is busy; poll again [5]
+        lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte
+        andi    t1, t1, 1                           ; Mask bit 0 (TxRDY)
+        beqz    t1, ecall_poll_serial_write_loop    ; If 0, transmitter is busy; poll again
         
-        sb      a0, [t0]                            ; Write the byte to the Data register (offset 0) [3, 5]
-        ret                                         ; Return to caller [6, 7]
+        sb      a0, [t0]                            ; Write the byte to the Data register
+        ret                                         ; Return to caller 
 
 ; a0 - debug string
 k_dbg_print:
 	li      t0, SERIAL_PORT
 	1
-	lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte [2, 3]
-	andi    t1, t1, 1                           ; Mask bit 0 (TxRDY) [4, 5]
+	lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte
+	andi    t1, t1, 1                           ; Mask bit 0 (TxRDY)
 	beqz    t1, %B1
 	lb			t2, [a0]
 	beqz    t2, %F2
-	sb      t2, [t0]                            ; Write the byte to the Data register (offset 0) [3, 5]
+	sb      t2, [t0]                            ; Write the byte to the Data register (offset 0)
 	addi		a0, a0, 1
 	j				%B1
 	2
-	ret                                         ; Return to caller [6, 7]
+	ret                     
 
 ecall_poll_serial_read:
 	; Non-blocking (can return null)
@@ -124,9 +132,3 @@ fifo_base:
   DEFS 10
 ALIGN 4
 
-STRUCT
-FIFO_BASE WORD ; Pointer to FIFO array
-FIFO_HEAD BYTE ; index into array
-FIFO_TAIL BYTE ; index into array
-FIFO_SIZE BYTE ; size of array
-FIFO_STRUCT_SIZE ALIAS

@@ -43,3 +43,9 @@ It should fault on: target_address < virtual start or (target_address-virtual + 
 NOTE: the >= so i need to make sure the last word is not accessable
 
 The main reason for the DMMU virt start is because my origonal plan was just base + offset dmmu which is bad because say the data section was from 0x40_100 to 0x40_200 then for my base to work i would have to set the base to be 0x40_000 for all the addresses to align up but this exposes a vaulnerabliltiy because if i try to write to 0x90 it will work but it should not be able to since it is out side of the data section and could potentially modify the text section. 
+
+I just though of something, on a swap if the  origonal program is swapped then the forked one will read incorrect memory addresses so i need to have some kind of dependency where if another pcb which relies on the text section then i need to load that text section somewhere and then modify both
+
+Oh and if the origonal exits then i need to make sure the text section is saved somewhere otherwise the fork does not work so maybe. WHY ARE OS SO FUCKING COMPLICATED I LOVE AND HATE THIS
+
+Ok so new plan, even more complicated, I am going to make a kind of poor mans paging allocator, instead of just pointing to the pentry instead i create a memory segment manager so i can count how many references and if they go to 0 then ufree else it will persist in memory, i will store two segments per PCB, one text and one data, on fork shllow copy the text (give it a pointer to the existing) and allocate a new  data segment.
