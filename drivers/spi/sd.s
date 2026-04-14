@@ -68,12 +68,6 @@ sd_init:
 
 	sw ra, SD_RES7_T_SIZE[sp]
 	
-  li a0, 0xAB
-  call spi_send_byte
-
-  li a0, 0x13
-  call spi_send_byte
-
 	call send_dummy_clocks
 	; send command CMD0
 
@@ -119,22 +113,19 @@ sd_readRes1:
 	sw s2, 8[sp]
 	sw ra, 12[sp]
 
-;
-  li a0, 512
-  call spi_set_block_len
-  call spi_send_block_blocking
-
-
 	li a0, 0xFF
 	mv s0, a0
 	mv s1, zero
-	li s2, 10
+	li s2, 100
 	; while(spi_send_byte(0xFF)) == 0xFF && (attemps++<10));
 	1
 	call spi_send_byte
-	beq a0, s0, %B1
 	addi s1, s1, 1
-	blt s1, s2, %B1
+	sltu t1, s1, s2
+  subi t2, a0, 0xFF
+	seqz t2, t2
+  and t1, t1, t2
+  bnez t1, %B1
 
 	lw s0, [sp]
 	lw s1, 4[sp]
@@ -188,7 +179,7 @@ send_dummy_clocks:
 	addi sp, sp, -4
 	sw ra, [sp]
 	; set up SPI for block transfer of 10 bytes
-	li a0, 10
+	li a0, 12
 	call spi_set_block_len
 	; load 10 FF bytes into TX_RAM
 	li t0, SPI_BASE
@@ -251,24 +242,20 @@ or a0, a0, t0
 call spi_send_byte
 
 ; send msb of arg
-li t1, 24
+srli a0, a1, 24
+call spi_send_byte
+
+srli a0, a1, 16
+call spi_send_byte
+
+srli a0, a1, 8
+call spi_send_byte
+
+andi a0, a1, 0xFF
 srl a0, a1, t1
 call spi_send_byte
 
-addi t1, t1, -8
-srl a0, a1, t1
-call spi_send_byte
-
-addi t1, t1, -8
-srl a0, a1, t1
-call spi_send_byte
-
-addi t1, t1, -8
-srl a0, a1, t1
-call spi_send_byte
-
-li t1, 1
-or a0, a2, t1
+ori a0, a2, 1
 call spi_send_byte
 
 	lw ra, [sp]

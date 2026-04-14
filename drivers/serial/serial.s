@@ -12,7 +12,7 @@ irsq_serial_read:
     li      t0, SERIAL_PORT
     lb      t1, SERIAL_CONTROL_OFFSET[t0]           ; read control byte
     andi    t1, t1, 2                               ; 
-    beqz    t1, ecall_poll_serial_read_end          ; check if the Receiver ready bit (RxRDY) is high
+    beqz    t1, irsq_serial_read_end          ; check if the Receiver ready bit (RxRDY) is high
     lb      a0, [t0]                                ; read  byte from serial
     ; store it in fifo out 
     ; check if byte is '\n'? if so then invoke scheduler read finish?

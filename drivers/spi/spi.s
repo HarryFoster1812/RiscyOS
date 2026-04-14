@@ -28,7 +28,7 @@ spi_init:
 
   li t2, SYS_PIO
   li t3, 0xFF
-  sw t3, 4[t2]
+  sw t3, 8[t2]
 	
 	; initialise TX with dummy byte FF
 	addi t1, zero, -1
