@@ -21,11 +21,6 @@ boot:
     la      t0, mhandler            ; Load address of machine trap handler
     csrw    MTVEC, t0               ; Set trap vector base address to mhandler
 
-    csrw    MSCRATCH, sp            ; Save kernel stack pointer in MSCRATCH for trap handler use
-
-    la      sp, user_stack          ; Switch stack pointer to user-space stack
-    la      ra, user_main           ; Load address of user program entry point
-    csrw    MEPC, ra                ; Set MEPC (Machine Exception PC) to user program start
 
     li      t0, 0x800               ; Bit 11: enable Machine External Interrupt
     csrs    MIE, t0                 ; Set corresponding bit in Machine Interrupt Enable register
@@ -41,7 +36,20 @@ boot:
 		call kheap_init									; Initalise the kernel heap
 		call ualloc_init								; initalise the user-space allocator
 
+    la a0, kernel_name
+    call k_dbg_print
+
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
 
+
+    csrw    MSCRATCH, sp            ; Save kernel stack pointer in MSCRATCH for trap handler use
+
+    la      sp, user_stack          ; Switch stack pointer to user-space stack
+    la      ra, user_main           ; Load address of user program entry point
+    csrw    MEPC, ra                ; Set MEPC (Machine Exception PC) to user program start
+
     mret                            ; Return from machine mode -> jump to MEPC (user_main) in user mode
+
+
+

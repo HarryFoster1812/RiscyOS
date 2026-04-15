@@ -46,16 +46,18 @@ k_dbg_print:
 	2
 	ret                     
 
-ecall_poll_serial_read:
-	; Non-blocking (can return null)
-	addi sp, sp, -4
-	sw ra, [sp]
-	mv s0, a0 ; store the trap frame
-	call fifo_pop
-	sw a0, TF_A0[s0]
-	lw ra, [sp]
-	addi sp, sp, 4
-	ret
+; NOTE: Obsolete, new api should be a read request
+
+; ecall_poll_serial_read:
+; 	; Non-blocking (can return null)
+; 	addi sp, sp, -4
+; 	sw ra, [sp]
+; 	mv s0, a0 ; store the trap frame
+; 	call fifo_pop
+; 	sw a0, TF_A0[s0]
+; 	lw ra, [sp]
+; 	addi sp, sp, 4
+; 	ret
 
 
 ; a0 byte to push

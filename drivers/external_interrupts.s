@@ -1,3 +1,8 @@
+INT_CONTROLLER_BASE EQU 0x10400
+INT_ENABLE          EQU 0x4
+INT_OUT             EQU 0x8
+
+
 ; --------------------
 ; void external_interrupt_handler()
 ;
@@ -56,3 +61,6 @@ logBaseTwo_end:
 logBaseTwo_bad_input:
     li a0, -1
     ret
+
+
+

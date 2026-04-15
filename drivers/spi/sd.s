@@ -95,9 +95,12 @@ sd_init:
 
 	
 	mv s0, a0
-
+  j %F2
 
 	1
+  la a0, sd_failure_str
+  call k_dbg_print
+  2
 	; disable sd
 	SD_CS_DISABLE()
 
@@ -326,7 +329,7 @@ sd_start_read_single_block:
 		bne a0, t0, %F2  
 		li a0, 512
 		call spi_set_block_len
-		call spi_send_block
+		call spi_send_block_blocking
 
 	2
 	mv a0, s2 ; return res 1
@@ -341,4 +344,5 @@ sd_start_read_single_block:
 	addi sp, sp, 20
 	ret
 
-
+  sd_failure_str DEFB "Failed to init sd\0"
+  ALIGN 4
