@@ -358,6 +358,7 @@ ret
 
 
 ; sd_start_read(uint32_t addr)
+; NOTE: addr should be pre-configured (byte addresses or block addressed)
 sd_start_read: 
 	addi sp, sp, -8
 	sw s0, [sp]
@@ -420,7 +421,7 @@ sd_start_read:
 	addi sp, sp, 8
 	ret
 
-sd_tail_read_block:
+sd_tail_read:
 	addi sp, sp, -4
 	sw ra, [sp]
   ; this is the irq when the read block is finished
@@ -438,7 +439,8 @@ sd_tail_read_block:
   ret
 
 
-; sd_start_read(uint32_t addr)
+; sd_start_write(uint32_t addr)
+; NOTE: addr should be pre-configured (byte addresses or block addressed)
 sd_start_write: 
 	addi sp, sp, -8
 	sw s0, [sp]
@@ -488,7 +490,7 @@ sd_start_write:
 ; 0x00 - busy timeout
 ; 0x05 - data accepted
 ; 0xFF - response timeout
-sd_tail_write_block:
+sd_tail_write:
 	addi sp, sp, -4
 	sw ra, [sp]
   ; this is the irq when the read block is finished

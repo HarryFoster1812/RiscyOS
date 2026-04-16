@@ -17,6 +17,7 @@ kernel_stack_size EQU 600
 #include "./arch/riscv/context_switch.s"
 
 ;; File system
+#include "./kernel/fs/fs.s"
 
 ;; IO Drivers
 #include "./drivers/drivers.s"

@@ -2,11 +2,10 @@ INT_CONTROLLER_BASE EQU 0x10400
 INT_ENABLE          EQU 0x4
 INT_OUT             EQU 0x8
 
-
 ; --------------------
 ; void external_interrupt_handler()
 ;
-; Handles external interrupts from peripherals.
+; Handles all external interrupts from peripherals.
 ;
 ; Registers Used:
 ; sp - stack pointer
@@ -14,26 +13,31 @@ INT_OUT             EQU 0x8
 ; a0 - interrupt status
 ; t0 - table base / temporary
 external_interrupt_handler:
-    subi sp, sp, 8
-    sw a0, 4[sp]
-    sw ra, [sp]
+    addi sp, sp, -8           ; Adjust stack pointer
+    sw a0, 4[sp]                      ; Save interrupt status
+    sw ra, [sp]                        ; Save return address
 
-    li t0, INT_CONTROLLER_BASE
-    lw a0, INT_OUT[t0]           ; Read pending interrupts
+handle_interrupts:
+    li t0, INT_CONTROLLER_BASE        ; Load interrupt controller base
+    lw a0, INT_OUT[t0]                ; Read pending interrupts
+    beqz a0, done_handling            ; If no interrupts, exit the loop
 
-    call logBaseTwo               ; Get index of first set bit
+    call logBaseTwo                   ; Get index of first set bit
 
-    la t0, peripheral_interrupt_table
-    slli a0, a0, 2
-    add a0, a0, t0
-    lw t0, [a0]
-    jalr t0                       ; Dispatch handler
+    la t0, peripheral_interrupt_table  ; Load base address of interrupt handlers
+    slli a0, a0, 2                    ; Multiply index by 4 (word size)
+    add a0, a0, t0                    ; Calculate address of the handler
+    lw t0, [a0]                       ; Load interrupt handler address
+    jalr t0                            ; Dispatch handler
 
-    lw a0, 4[sp]
-    lw ra, [sp]
-    addi sp, sp, 8
+    j handle_interrupts              ; Continue handling the next interrupt
+
+done_handling:
+    lw a0, 4[sp]                      ; Restore interrupt status
+    lw ra, [sp]                        ; Restore return address
+    addi sp, sp, 8                    ; Restore stack pointer
     ret
-	
+
 ; --------------------
 ; int logBaseTwo(int value)
 ;
@@ -44,23 +48,18 @@ external_interrupt_handler:
 ; t0 - temporary for shifting
 ; t1 - temporary for comparison
 logBaseTwo:
-    beqz a0, logBaseTwo_bad_input
-    mv t0, a0
-    mv a0, zero
-    li t1, 1
+    beqz a0, logBaseTwo_bad_input     ; Handle zero input
+    mv t0, a0                         ; Copy input to temporary register
+    li a0, 0                           ; Initialize result (log2)
 
-logBaseTwo_innerloop:
-    beq t1, t0, logBaseTwo_end
-    srli t0, t0, 1
-    addi a0, a0, 1
-    j logBaseTwo_innerloop
+logBaseTwo_loop:
+    srli t0, t0, 1                    ; Shift t0 right by 1 (divide by 2)
+    addi a0, a0, 1                    ; Increment log2 result
+    bnez t0, logBaseTwo_loop          ; Continue until t0 becomes 0
 
 logBaseTwo_end:
     ret
 
 logBaseTwo_bad_input:
-    li a0, -1
+    li a0, -1                          ; Return error code for invalid input
     ret
-
-
-
