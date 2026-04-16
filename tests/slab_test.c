@@ -245,10 +245,6 @@ void test_single_object_slab() {
     ASSERT_EQ(count_objects(head).used_objects, 0);
 }
 
-// ==========================
-// Main
-// ==========================
-
 int main() {
     test_init();
     test_growth();
