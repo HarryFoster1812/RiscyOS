@@ -1,5 +1,7 @@
 ARCH v5
 
+#define DEBUG 0
+
 kernel_stack_size EQU 600
 
 ; Kernel Text

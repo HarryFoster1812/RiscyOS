@@ -21,6 +21,9 @@ CMD8			EQU 8
 CMD8_ARG	EQU 0x1AA
 CMD8_CRC	EQU 0x86 //(1000011 << 1)
 
+; NOTE: CRC is only required for CMD0 and CMD8 all other commands accept dummy CRC
+; it could be useful for debugging but calculating crc16 for 512 r/w is quite expensive
+
 CMD58     EQU 58
 CMD58_ARG EQU  0x00000000
 CMD58_CRC EQU 0x00
@@ -35,7 +38,12 @@ ACMD41_CRC EQU 0x00
 
 CMD17                EQU  17
 CMD17_CRC            EQU 0x00
-SD_MAX_READ_ATTEMPTS EQU 1563
+SD_MAX_READ_ATTEMPTS EQU 250000 ; (0.1s *40000000 Mhz)/(2(clock div) * 8 byte)
+
+CMD24                EQU 24
+CMD24_CRC            EQU 0x00
+SD_MAX_WRITE_ATTEMPTS EQU 625000
+SD_START_TOKEN      EQU 0xFE
 
 IRQ_STATUS_BYTE_BIT EQU 5
 IRQ_STATUS_BLOCK_BIT EQU 6
@@ -43,7 +51,16 @@ IRQ_STATUS_ERROR_BIT EQU 7
 
 SD_SUCCESSFUL_READ EQU 0xFE
 SD_DATA_ERROR EQU 0x00 ; 0x0X (the higher nibble of the byte is 0 then there is an error)
+SD_DATA_ACCEPTED EQU 0x05
 SD_TIMEOUT EQU 0xFF
+
+; SD_INFO
+STRUCT
+SD_TYPE BYTE
+SD_BLOCK_ADDRESSSING BYTE ; bool 1 = use 512 byte addressing 0 = use byte addressing
+SD_STATE BYTE             ; READING, WRITING IDK yet
+STRUCT_ALIGN 4 
+SD_INFO_T_SIZE ALIAS
 
 SD_INFO DEFS  SD_INFO_T_SIZE
 
@@ -52,17 +69,18 @@ SD_STATE_WAIT_READ EQU 1
 SD_STATE_WAIT_WRITE EQU 2
 SD_STATE_ERROR EQU 3
 
-; SD_INFO
-STRUCT
-SD_TYPE BYTE
-SD_BLOCK_ADDRESSSING BYTE
-SD_STATE BYTE
-SD_INFO_T_SIZE ALIAS
+SD_ERR_OK            EQU 0
+SD_ERR_TIMEOUT       EQU 1
+SD_ERR_BAD_RESP      EQU 2
+SD_ERR_UNSUPPORTED   EQU 3
+SD_ERR_INIT_FAILED   EQU 4
 
 ; SD_RES7
-SD_RES7_T_SIZE EQU 5 +3 ; 3 bytes of padding
+SD_RES7_T_SIZE EQU 5 + 3 ; 3 bytes of padding
 
 ALIGN 4
+
+; bool sd_init()
 sd_init:
 	addi sp, sp, -(4+	SD_RES7_T_SIZE)
 
@@ -83,7 +101,7 @@ sd_init:
 	call sd_readRes1
 
 	li t0, 1
-	bne a0, t0, %F1
+	bne a0, t0, sd_init_failure
 
 
 	li a0, CMD8
@@ -94,21 +112,84 @@ sd_init:
 	call sd_readRes3_7
 
 	
-	mv s0, a0
-  j %F2
+  ; res buffer is at sp
+  lb t0, 0[sp]      ; R1
+  li t1, 1
+  bne t0, t1, sd_init_failure
 
-	1
-  la a0, sd_failure_str
-  call k_dbg_print
-  2
-	; disable sd
-	SD_CS_DISABLE()
+  ; check echo pattern (last 2 bytes should be 0x01AA)
+  lb t2, 3[sp]
+  lb t3, 4[sp]
+  li t4, 0x01
+  bne t2, t4, sd_init_failure
+  li t4, 0xAA
+  bne t3, t4, sd_init_failure
 
+  sd_acmd_loop:
+      ; CMD55
+      SD_CS_ENABLE()
+      SPI_TRANSFER(0xFF)
+
+      li a0, CMD55
+      li a1, CMD55_ARG
+      li a2, CMD55_CRC
+      call sd_send_command_crc
+      call sd_readRes1
+      SD_CS_DISABLE()
+      SPI_TRANSFER(0xFF)
+
+    ; ACMD41
+    SD_CS_ENABLE()
+    SPI_TRANSFER(0xFF)
+
+    li a0, ACMD41
+    li a1, ACMD41_ARG
+    li a2, ACMD41_CRC
+    call sd_send_command_crc
+    call sd_readRes1
+
+    SD_CS_DISABLE()
+    SPI_TRANSFER(0xFF)
+
+    bnez a0, sd_acmd_loop
+
+    ; CMD58 
+    SD_CS_ENABLE()
+    SPI_TRANSFER(0xFF)
+
+    li a0, CMD58
+    li a1, CMD58_ARG
+    li a2, CMD58_CRC
+    call sd_send_command_crc
+
+    mv a0, sp
+    call sd_readRes3_7
+
+    SD_CS_DISABLE()
+    SPI_TRANSFER(0xFF)
+
+
+    ; if we are here then everything is good and we can increase sclk speed
+    li a0, 2 ; 20 MHz
+    call spi_set_clock_div
+
+  li a0, 1 ; init succesful
 
 	lw ra, SD_RES7_T_SIZE[sp]
 	addi sp, sp, (4+	SD_RES7_T_SIZE)
 	ret
 
+; FAILURE
+sd_init_failure:
+	SD_CS_DISABLE()
+  mv a0, zero ; return false
+	lw ra, SD_RES7_T_SIZE[sp]
+	addi sp, sp, (4+	SD_RES7_T_SIZE)
+  ret
+
+; returns:
+; a0 = response OR 0xFF if timeout
+; a1 = 0 (OK) or SD_ERR_TIMEOUT
 sd_readRes1:
 	addi sp, sp, -16
 	sw s0, [sp]
@@ -116,20 +197,26 @@ sd_readRes1:
 	sw s2, 8[sp]
 	sw ra, 12[sp]
 
-	li a0, 0xFF
-	mv s0, a0
-	mv s1, zero
-	li s2, 100
-	; while(spi_send_byte(0xFF)) == 0xFF && (attemps++<10));
-	1
-	call spi_send_byte
-	addi s1, s1, 1
-	sltu t1, s1, s2
-  subi t2, a0, 0xFF
-	seqz t2, t2
-  and t1, t1, t2
-  bnez t1, %B1
+	li s1, 0              ; attempts
+	li s2, 100            ; max attempts
+	li a1, SD_ERR_TIMEOUT ; default = timeout
 
+1
+	li a0, 0xFF
+	call spi_send_byte
+
+	; if != 0xFF → valid response
+	li t0, 0xFF
+	bne a0, t0, %F2
+
+	addi s1, s1, 1
+	blt s1, s2, %b1
+	j %F3
+
+2
+	li a1, SD_ERR_OK
+
+3
 	lw s0, [sp]
 	lw s1, 4[sp]
 	lw s2, 8[sp]
@@ -220,6 +307,7 @@ send_dummy_clocks:
 	addi sp, sp, 4
 	ret
 
+
 ; a0 - command
 ; a1 - args
 sd_send_command:
@@ -255,7 +343,6 @@ srli a0, a1, 8
 call spi_send_byte
 
 andi a0, a1, 0xFF
-srl a0, a1, t1
 call spi_send_byte
 
 ori a0, a2, 1
@@ -270,21 +357,13 @@ calcualte_CRC7:
 ret
 
 
-; sd_start_read_single_block(uint32_t addr, uint8_t *token)
-sd_start_read_single_block: 
-	addi sp, sp, -20
+; sd_start_read(uint32_t addr)
+sd_start_read: 
+	addi sp, sp, -8
 	sw s0, [sp]
-	sw s1, 4[sp]
-	sw s2, 8[sp]
-	sw s2, 12[sp]
-	sw ra, 16[sp]
+	sw ra, 4[sp]
 
 	mv s0, a0
-	mv s1, a1
-
-	; *token = 0xFF
-	li t0, 0xFF
-	sb t0, [s1]
 
 	// assert chip select
 	SD_CS_ENABLE()
@@ -297,7 +376,7 @@ sd_start_read_single_block:
 
 	// read R1
 	call sd_readRes1
-	mv s2, a0 ; save res 1 (this is the return value)
+	mv s0, a0 ; save res 1 (this is the return value)
 
     // if response received from card
 	li t0, 0xFF
@@ -321,7 +400,7 @@ sd_start_read_single_block:
 
 		1
 
-		;/ set token to card response
+		; set token to card response
 		;*token = read;
 		sb a0, [s1] 
 		li t0, SD_SUCCESSFUL_READ
@@ -329,20 +408,139 @@ sd_start_read_single_block:
 		bne a0, t0, %F2  
 		li a0, 512
 		call spi_set_block_len
-		call spi_send_block_blocking
+		call spi_send_block
 
 	2
-	mv a0, s2 ; return res 1
+	mv a0, s0 ; return res 1
 	sd_invalid_read_response:
 	SD_CS_DISABLE()
 
 	lw s0, [sp]
-	lw s1, 4[sp]
-	lw s2, 8[sp]
-	lw s2, 12[sp]
-	lw ra, 16[sp]
-	addi sp, sp, 20
+	lw ra, 4[sp]
+	addi sp, sp, 8
 	ret
 
-  sd_failure_str DEFB "Failed to init sd\0"
-  ALIGN 4
+sd_tail_read_block:
+	addi sp, sp, -4
+	sw ra, [sp]
+  ; this is the irq when the read block is finished
+  ; the last two bytes are the crc (ignored)
+  SPI_TRANSFER(0xFF)
+  SPI_TRANSFER(0xFF)
+
+
+  SPI_TRANSFER(0xFF)
+	SD_CS_DISABLE()
+  SPI_TRANSFER(0xFF)
+
+	lw ra, [sp]
+	addi sp, sp, 4
+  ret
+
+
+; sd_start_read(uint32_t addr)
+sd_start_write: 
+	addi sp, sp, -8
+	sw s0, [sp]
+	sw ra, 8[sp]
+
+	mv s0, a0
+
+	// assert chip select
+  SPI_TRANSFER(0xFF)
+	SD_CS_ENABLE()
+  SPI_TRANSFER(0xFF)
+
+	// send CMD17
+	li a0, CMD24
+	mv a1, s0
+	li a2, CMD24_CRC
+	call sd_send_command_crc
+
+	// read R1
+	call sd_readRes1
+	mv s0, a0 ; save res 1 (this is the return value)
+
+    // if response received from card
+	li t0, 0xFF
+	beq a0, t0, sd_invalid_write_response
+
+    li a0, SD_START_TOKEN
+    call spi_send_byte
+
+		li a0, 512
+		call spi_set_block_len
+		call spi_send_block
+
+	2
+	mv a0, s0 ; return res 1
+	sd_invalid_write_response:
+  SPI_TRANSFER(0xFF)
+	SD_CS_DISABLE()
+  SPI_TRANSFER(0xFF)
+
+	lw s0, [sp]
+	lw ra, 4[sp]
+	addi sp, sp, 8
+	ret
+
+; returns write response from sd:
+; 0x00 - busy timeout
+; 0x05 - data accepted
+; 0xFF - response timeout
+sd_tail_write_block:
+	addi sp, sp, -4
+	sw ra, [sp]
+  ; this is the irq when the read block is finished
+
+   ;while(++readAttempts != SD_MAX_WRITE_ATTEMPTS)
+  ;   if((read = SPI_transfer(0xFF)) != 0xFF) { *token = 0xFF; break; }
+
+		li t4, SD_MAX_WRITE_ATTEMPTS
+		mv t5, zero
+
+    sd_write_response_loop:
+    SPI_TRANSFER(0xFF)
+		; if spi_send_byte(FF) != FF break
+		bne a0, t6, %F1
+		
+		addi t5, t5, 1 ; attempts++;
+		; while attempts < SD_MAX_READ_ATTEMPTS
+		bne t5, t4, sd_write_response_loop
+
+    1
+    ; check if data accepted
+    andi t0, a0, 0x1F ; a write response is xxx0<status>1
+    li t1, SD_DATA_ACCEPTED
+    bne t0, t1, sd_write_error
+
+		mv t5, zero
+
+    sd_write_busy_loop:
+    SPI_TRANSFER(0xFF)
+		; if spi_send_byte(FF) != FF break
+		bne a0, t6, %F1
+		
+		addi t5, t5, 1 ; attempts++;
+		; while attempts < SD_MAX_READ_ATTEMPTS
+		bne t5, t4, sd_write_busy_loop
+    ; time out waiting for busy
+    mv a0, zero
+    j %F3
+
+    2
+    li a0, 0x5
+    j %F3
+
+  sd_write_error:
+  li a0, 0xFF
+
+  3
+  SPI_TRANSFER(0xFF)
+	SD_CS_DISABLE()
+  SPI_TRANSFER(0xFF)
+	
+  lw ra, [sp]
+	addi sp, sp, 4
+  ret
+

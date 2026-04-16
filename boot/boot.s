@@ -41,8 +41,17 @@ boot:
 
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
+    ; check if sd init was sucessful
 
-
+    ; call fat_init
+    ; call load_idle_proc
+    ; call load_shell
+  
+    #if DEBUG==1
+      la t0, kernel_stack_base
+      bne sp, t0, .                   ; catch a stack leak
+    #endif
+  
     csrw    MSCRATCH, sp            ; Save kernel stack pointer in MSCRATCH for trap handler use
 
     la      sp, user_stack          ; Switch stack pointer to user-space stack

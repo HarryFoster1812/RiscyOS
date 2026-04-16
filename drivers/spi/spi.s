@@ -63,10 +63,10 @@ spi_send_byte:
 	li t2, (1<<IRQ_STATUS_BYTE_BIT)
 
 	; poll status until rx vaild
-	1
+spi_poll_interrupt:
 	lw t3, SPI_STATUS[t0]
 	and t3, t3, t2 
-	beqz t3, %B1
+	beqz t3, spi_poll_interrupt
 	; rx valid high
 	lw a0, SPI_RXDATA[t0]
 	sw zero, SPI_STATUS[t0] ; clear IRQ
@@ -86,14 +86,7 @@ spi_send_block_blocking:
 	li t2, (1<<IRQ_STATUS_BLOCK_BIT)
 
 	; poll status until rx vaild
-	1
-	lw t3, SPI_STATUS[t0]
-	and t3, t3, t2 
-	beqz t3, %B1
-	; rx valid high
-	lw a0, SPI_RXDATA[t0]
-	sw zero, SPI_STATUS[t0] ; clear IRQ
-	ret
+	j spi_poll_interrupt
 
 spi_set_block_len:
 	li t0, SPI_BASE
