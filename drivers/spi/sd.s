@@ -12,6 +12,10 @@
     li a0, x __NL__ \
     call spi_send_byte
 
+#define SD_SET_STATE(x) \
+    la t0, SD_INFO __NL__ \
+    li t1, x __NL__ \
+    sb t1, SD_STATE[t0] __NL__ \
 
 CMD0			EQU 0
 CMD0_ARG	EQU 0
@@ -56,7 +60,6 @@ SD_TIMEOUT EQU 0xFF
 
 ; SD_INFO
 STRUCT
-SD_TYPE BYTE
 SD_BLOCK_ADDRESSSING BYTE ; bool 1 = use 512 byte addressing 0 = use byte addressing
 SD_STATE BYTE             ; READING, WRITING IDK yet
 STRUCT_ALIGN 4 
@@ -406,6 +409,8 @@ sd_start_read:
 		sb a0, [s1] 
 		li t0, SD_SUCCESSFUL_READ
 
+    SD_SET_STATE(SD_STATE_WAIT_READ)
+
 		bne a0, t0, %F2  
 		li a0, 512
 		call spi_set_block_len
@@ -433,6 +438,8 @@ sd_tail_read:
   SPI_TRANSFER(0xFF)
 	SD_CS_DISABLE()
   SPI_TRANSFER(0xFF)
+
+  SD_SET_STATE(SD_STATE_IDLE)
 
 	lw ra, [sp]
 	addi sp, sp, 4
@@ -466,6 +473,8 @@ sd_start_write:
     // if response received from card
 	li t0, 0xFF
 	beq a0, t0, sd_invalid_write_response
+
+  SD_SET_STATE(SD_STATE_WAIT_WRITE)
 
     li a0, SD_START_TOKEN
     call spi_send_byte
@@ -542,6 +551,8 @@ sd_tail_write:
 	SD_CS_DISABLE()
   SPI_TRANSFER(0xFF)
 	
+  SD_SET_STATE(SD_STATE_IDLE)
+
   lw ra, [sp]
 	addi sp, sp, 4
   ret

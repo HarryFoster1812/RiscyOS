@@ -51,7 +51,9 @@ slab_header_t* slab_alloc_new(slab_header_t **head, uint32_t object_size, uint32
     return slab;
 }
 
-void* slab_get(slab_header_t **head, uint32_t object_size, uint32_t num_objects) {
+void* slab_get(slab_header_t **head) {
+  if(!head || !*(head)){return NULL;}
+
 	slab_header_t *slab = *head;
 	while (slab) {
 		// check if there is a free object in the slab
@@ -65,7 +67,7 @@ void* slab_get(slab_header_t **head, uint32_t object_size, uint32_t num_objects)
 	}
 
 	// no free object found, try to allocate new slab
-	slab = slab_alloc_new(head, object_size, num_objects);
+	slab = slab_alloc_new(head, (*head)->object_size, (*head)->total_objects);
 	if (!slab) return NULL; // allocation failed
 	slab_node_t *node = slab->free_list;
 	slab->free_list = node->next_free;
@@ -79,14 +81,13 @@ void slab_free(slab_header_t **head, void *obj) {
 	// walk slab linked list to find slab that the object belongs to
 	while (slab) {
 		uint8_t *start = (uint8_t *)slab + sizeof(slab_header_t);
-		uint8_t *end = start + (slab->object_size+1) * slab->total_objects;
+		uint8_t *end = start + (sizeof(slab_node_t*) + slab->object_size) * slab->total_objects;
 
 		if ((uint8_t *)obj >= start && (uint8_t *)obj < end) {
 			// object belongs to this slab
 			slab_node_t *node = (slab_node_t*)((uint8_t*)obj - sizeof(slab_node_t*));
-			slab_node_t* temp = node->next_free;
 			node->next_free = slab->free_list;
-			slab->free_list = temp;
+			slab->free_list = node;
 			slab->free_objects++;
 
 			// if 2 or more slabs fully free, free one
@@ -99,7 +100,7 @@ void slab_free(slab_header_t **head, void *obj) {
 			while (tmp) {
 				if (tmp->free_objects == tmp->total_objects){
 					free_target = tmp;
-					free_target_prev = tmp;
+					free_target_prev = prev;
 					fully_free_count++;
 				}
 				prev = tmp;

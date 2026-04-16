@@ -1,8 +1,7 @@
 /*  Define the ECALL handlers table */
 // NOTE: Add ecalls here
 #define ECALL_TABLE_LIST \
-    X(ECALL_SEND_LCD_CONTROL, ecall_sendLCDControl)  \
-    X(ECALL_LCD_PRINT_DECIMAL, ecall_LCD_print_decimal) \
+    X(ECALL_LCD_PRINT_DECIMAL, ecall_brk) \
 
 /* Generate the table labels */
 ECALL_TABLE_START:

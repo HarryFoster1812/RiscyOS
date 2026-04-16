@@ -24,6 +24,11 @@ kernel_stack_size EQU 600
 
 ;; Memory
 #include "./kernel/memory/umem.s"
+#include "./kernel/memory/heap.s"
+
+;; Utility Functions
+#include "./lib/maths.s"
+#include "./lib/delay.s"
 #include "./lib/memutils.s"
 
 ; Kernel Static Data

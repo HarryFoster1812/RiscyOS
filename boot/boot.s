@@ -29,15 +29,12 @@ boot:
     csrs    MSTATUS, t0             ; Enable global machine-level interrupts
 
     li      t0, INT_CONTROLLER_BASE ; Load base address of interrupt controller
-    li      t1, 0x10                ; Interrupt enable mask (device-specific value)
+    li      t1, PERIPHERAL_ENABLE_BITMASK  ; Interrupt enable mask (device-specific value) [][][][][User]
     sw      t1, INT_ENABLE[t0]      ; Enable interrupt source in interrupt controller
     sw      zero, 12[t0]            ; Clear/acknowledge any pending interrupts
 
 		call kheap_init									; Initalise the kernel heap
 		call ualloc_init								; initalise the user-space allocator
-
-    la a0, kernel_name
-    call k_dbg_print
 
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
