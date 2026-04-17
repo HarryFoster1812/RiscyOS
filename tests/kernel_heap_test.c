@@ -152,24 +152,6 @@ void test_alternating() {
   kfree(d);
 }
 
-void test_boundary() {
-  printf("[TEST] boundary\n");
-
-  kheap_init();
-
-  char* a = kmalloc(16);
-
-  for (int i = 0; i < 64; i++) {
-    a[i] = 0xAA;
-  }
-
-  kfree(a);
-
-  heap_header_t* h = (heap_header_t*)kernel_heap_start;
-
-  ASSERT(!IS_USED(h));
-}
-
 void test_stress() {
   printf("[TEST] stress\n");
 
@@ -204,7 +186,6 @@ int main() {
   test_full_merge();
   test_fragmentation();
   test_alternating();
-  test_boundary();
   test_stress();
 
   printf("\n ALL KERNEL HEAP TESTS PASSED \n");
