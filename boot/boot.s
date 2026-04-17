@@ -38,9 +38,9 @@ boot:
 
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
+    call fat_init
     ; check if sd init was sucessful
 
-    ; call fat_init
     ; call load_idle_proc
     ; call load_shell
   

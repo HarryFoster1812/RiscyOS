@@ -53,10 +53,10 @@ IDLE_TASK_PCB DEFW 0x0 ; holds a reference to the idle_program pcb which the sch
 ; Kernel HEAP
 kernel_heap_start DEFB 0
 ; Kernel Stack
-org 0x0_3FFF-kernel_stack_size-1
+org 0x0_4000-kernel_stack_size
 kernel_heap_end DEFB 0
 
-org 0x0_3FFF
+org 0x0_4000
 kernel_stack_base:
 org 0x4_0000
 

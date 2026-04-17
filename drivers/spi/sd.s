@@ -121,8 +121,8 @@ sd_init:
   bne t0, t1, sd_init_failure
 
   ; check echo pattern (last 2 bytes should be 0x01AA)
-  lb t2, 3[sp]
-  lb t3, 4[sp]
+  lbu t2, 3[sp]
+  lbu t3, 4[sp]
   li t4, 0x01
   bne t2, t4, sd_init_failure
   li t4, 0xAA
@@ -130,20 +130,12 @@ sd_init:
 
   sd_acmd_loop:
       ; CMD55
-      SD_CS_ENABLE()
-      SPI_TRANSFER(0xFF)
 
       li a0, CMD55
       li a1, CMD55_ARG
       li a2, CMD55_CRC
       call sd_send_command_crc
       call sd_readRes1
-      SD_CS_DISABLE()
-      SPI_TRANSFER(0xFF)
-
-    ; ACMD41
-    SD_CS_ENABLE()
-    SPI_TRANSFER(0xFF)
 
     li a0, ACMD41
     li a1, ACMD41_ARG
@@ -151,14 +143,8 @@ sd_init:
     call sd_send_command_crc
     call sd_readRes1
 
-    SD_CS_DISABLE()
-    SPI_TRANSFER(0xFF)
-
     bnez a0, sd_acmd_loop
 
-    ; CMD58 
-    SD_CS_ENABLE()
-    SPI_TRANSFER(0xFF)
 
     li a0, CMD58
     li a1, CMD58_ARG
@@ -200,26 +186,20 @@ sd_readRes1:
 	sw s2, 8[sp]
 	sw ra, 12[sp]
 
-	li s1, 0              ; attempts
-	li s2, 100            ; max attempts
-	li a1, SD_ERR_TIMEOUT ; default = timeout
-
-1
 	li a0, 0xFF
+	mv s0, a0
+	mv s1, zero
+	li s2, 100
+	; while(spi_send_byte(0xFF)) == 0xFF && (attemps++<10));
+	1
 	call spi_send_byte
-
-	; if != 0xFF → valid response
-	li t0, 0xFF
-	bne a0, t0, %F2
-
 	addi s1, s1, 1
-	blt s1, s2, %b1
-	j %F3
+	sltu t1, s1, s2
+  subi t2, a0, 0xFF
+	seqz t2, t2
+  and t1, t1, t2
+  bnez t1, %B1
 
-2
-	li a1, SD_ERR_OK
-
-3
 	lw s0, [sp]
 	lw s1, 4[sp]
 	lw s2, 8[sp]
@@ -404,23 +384,19 @@ sd_start_read:
 
 		1
 
-		; set token to card response
-		;*token = read;
-		sb a0, [s1] 
-		li t0, SD_SUCCESSFUL_READ
-
     SD_SET_STATE(SD_STATE_WAIT_READ)
+		li t0, SD_SUCCESSFUL_READ
 
 		bne a0, t0, %F2  
 		li a0, 512
 		call spi_set_block_len
 		call spi_send_block
-
+    j %F3
 	2
-	mv a0, s0 ; return res 1
 	sd_invalid_read_response:
 	SD_CS_DISABLE()
-
+  3
+	mv a0, s0 ; return res 1
 	lw s0, [sp]
 	lw ra, 4[sp]
 	addi sp, sp, 8

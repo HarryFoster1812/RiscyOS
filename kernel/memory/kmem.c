@@ -17,8 +17,8 @@ typedef struct heap_header {
 #define ALIGN4(x) (((x) + 3) & ~3)
 
 // this tells C the symbol IS the address.
-extern uint8_t* kernel_heap_start;
-extern uint8_t* kernel_heap_end;
+extern uint8_t kernel_heap_start[];
+extern uint8_t kernel_heap_end[];
 
 void kheap_init(void) {
     // With arrays, the name itself evaluates to the address. 
