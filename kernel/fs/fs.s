@@ -21,7 +21,7 @@ fat_init:
 
   ; data should now be in the RX 512 byte buffer
   ; parse bios 
-
+  la fat_bpb
   ret
 
 

@@ -31,6 +31,7 @@ CMD8_CRC	EQU 0x86 //(1000011 << 1)
 CMD58     EQU 58
 CMD58_ARG EQU  0x00000000
 CMD58_CRC EQU 0x00
+CCS_BIT   EQU 3 ; used to determine the block mode
 
 CMD55      EQU 55
 CMD55_ARG  EQU 0x00000000
@@ -153,6 +154,13 @@ sd_init:
 
     mv a0, sp
     call sd_readRes3_7
+
+    ; parse this command
+    lbu t0, 1[sp] ; read ms byte of OCR 
+    srli t0, t0, CCS_BIT
+    andi t0, t0, 1 ; mask lsb
+    li t1, SD_INFO
+    sb t0, SD_BLOCK_ADDRESSSING[t1]
 
     SD_CS_DISABLE()
     SPI_TRANSFER(0xFF)
