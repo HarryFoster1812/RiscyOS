@@ -25,6 +25,8 @@ Ok so how will swap space work? If we have a program that has non-relocateable c
 I added a very basic mmu (and i need to make it better) but for now the mmu is just a base offset so vaddress + offset = physical address (which is only active during user mode)
 I plan to expand this so that there are 4 mmu registers (instruction base + limit, data base + limit) this should allow me to get individual process protection and it will let me use a very bad version of shared text sections so when a process forks it will be able to share the parent text section but have a different data section
 
+This allows me to get rid of the relocation problem since all programs will just be linked at 0x0 and virtual memory should be fine
+
 Yesterday I accedentally swapped VCC and ground of the SD SPI breakout board and it killed my sd card but the board seemed fine. I went out and bought another sd card (18 quid) and then spent the rest of the day bent over a oscilliscope trying to debug the signals. Now i am home, i just tested it and maybe the problem is the board as well, i think i might of killed both the board and the sd although the new one is not killed when i plug it in. Anyway i have just bought more boards and hopefully they work
 
 I think I need to make a mini polarity proctection circuit but I have no components 
@@ -46,6 +48,9 @@ The main reason for the DMMU virt start is because my origonal plan was just bas
 
 I just though of something, on a swap if the  origonal program is swapped then the forked one will read incorrect memory addresses so i need to have some kind of dependency where if another pcb which relies on the text section then i need to load that text section somewhere and then modify both
 
-Oh and if the origonal exits then i need to make sure the text section is saved somewhere otherwise the fork does not work so maybe. WHY ARE OS SO FUCKING COMPLICATED I LOVE AND HATE THIS
+Oh and if the original exits then i need to make sure the text section is saved somewhere otherwise the fork does not work. WHY ARE OS SO FUCKING COMPLICATED I LOVE AND HATE THIS
 
-Ok so new plan, even more complicated, I am going to make a kind of poor mans paging allocator, instead of just pointing to the pentry instead i create a memory segment manager so i can count how many references and if they go to 0 then ufree else it will persist in memory, i will store two segments per PCB, one text and one data, on fork shllow copy the text (give it a pointer to the existing) and allocate a new  data segment.
+Ok so new plan, even more complicated, I am going to make a kind of poor mans paging system, instead of just pointing to the pentry instead i create a memory segment manager so i can count how many references and if they go to 0 then ufree else it will persist in memory, i will store two segments per PCB, one text and one data, on fork shallow copy the text (give it a pointer to the existing) and allocate a new  data segment then memcpy parent to child.
+
+
+For process swapping, now that I have a mmu i can make sure that programs cant write outside of the program bounds. This means that I know 100% that no user program can do aything to the 1MiB frame store so if near the end i am very desperate i could rewrite kmalloc to use the frame buffer. I do want to avoid having the flat allocator inside of the kernel space for the frame buffer so i am going to re-use the flat alloctor logic and modify the functions to just take a pointer to the bit field and some metadata about the length, minium block len ect
