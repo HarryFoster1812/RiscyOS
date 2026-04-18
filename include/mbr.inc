@@ -1,3 +1,5 @@
+MBR_SIGNATURE EQU 0xaa55
+
 ; The master boot record on a storage device
 STRUCT
 BOOTSTRAP_CODE_AREA BYTE 446

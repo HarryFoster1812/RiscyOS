@@ -299,13 +299,6 @@ send_dummy_clocks:
 	ret
 
 
-; a0 - command
-; a1 - args
-sd_send_command:
-; call calcualte_CRC7
-; call sd_send_command_crc
-ret
-
 sd_send_command_crc:
 	addi sp, sp, -4
 	sw ra, [sp]
