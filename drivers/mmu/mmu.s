@@ -19,6 +19,7 @@ mmu_init:
 	; Enable address translation (simplistic virt+base)
 	li t1, 1
 	sw t1, MMU_ENABLE[t0]
+  ret
 
 
 ; a0 - pcb_t* pcb

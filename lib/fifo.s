@@ -1,9 +1,9 @@
 #include <fifo.inc>
 
 ; a0 pointer to fifo struct
-; a1 byte to push
+; a1 byte to enqueue
 ; if overflow then the oldest data is overwritten and the head is incremented
-fifo_push:
+fifo_enqueue:
 	lw t0, FIFO_BASE[a0]
 
 	lb t1, FIFO_HEAD[a0]
@@ -32,7 +32,7 @@ fifo_push:
 	ret
 
 ; a0 pointer to fifo struct
-fifo_pop:
+fifo_dequeue:
 
 	lw t0, FIFO_BASE[a0]
 
@@ -40,7 +40,7 @@ fifo_pop:
 	lb t2, FIFO_TAIL[a0]
 
 
-	beq t1, t2, fifo_pop_fail ; if head == tail fail
+	beq t1, t2, fifo_dequeue_fail ; if head == tail fail
 	; else return item
 	lb t2, FIFO_SIZE[a0] ; overwrite tail since no longer needed
 	add t3, t1, t0
@@ -50,6 +50,6 @@ fifo_pop:
 	sw t1, FIFO_HEAD[a0] ; store new head
 	ret
 
-	fifo_pop_fail:
+	fifo_dequeue_fail:
 	mv a0, zero
 	ret
