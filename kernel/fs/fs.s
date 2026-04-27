@@ -38,7 +38,10 @@ fat_init:
   bgtu t2, t3, mbr_invalid
   
   ; load the logical block of the parition
-  lw a0, PARTITION_LBA_FIRST[t1]
+  lhu a0, PARTITION_LBA_FIRST[t1] ; need to load half because it is not aligned because it is a 16 bit system
+  lhu t0, (PARTITION_LBA_FIRST+2)[t1]
+  slli t0, t0, 16 ; shift up
+  add a0, a0, t0
   sw a0, [sp] ; save the partion_begin
 
   ; read the FAT bpb
@@ -48,7 +51,7 @@ fat_init:
 
   ; check BS_Sign 
   li t1, FAT_BPB_SIGNATURE
-  lh t2, BS_Sign[t0]
+  lhu t2, BS_Sign[t0]
   bne t1, t2, bpb_invalid
   
   ; make sure bytes per sector is 512 (if it is not then fail)
