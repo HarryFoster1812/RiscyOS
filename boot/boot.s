@@ -19,6 +19,7 @@ boot:
     csrc    MSTATUS, t0             ; Clear MPP bits sets next privilege level to User mode
 
     la      t0, mhandler            ; Load address of machine trap handler
+;		ori			t0, t0, 1								; enable vectored interrupts
     csrw    MTVEC, t0               ; Set trap vector base address to mhandler
 
 

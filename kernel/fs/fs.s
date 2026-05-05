@@ -125,11 +125,17 @@ next_cluster:
 
 dir_lookup:
 
+; this will read a value from the fat table and 
+; update the next cluster info as well as if it is the last cluster 
 fat_read:
 
+; this will do something idk bro
 fat_write:
 
+; a0 - current directory?
 fat_mkdir:
 
-
+; ok this should be the file task io state machine
+; read the current task find out what stage
+; go to the corresponding function to handle that stage
 sd_irsq_handler:

@@ -17,10 +17,10 @@ exception_table:
     defw ecall_x                    ; Store page fault
 
 interrupt_table:
-    defw ecall_x                    ; User software interrupt
-    defw ecall_x                    ; Supervisor software interrupt
+    defw ecall_x                    ; User delegated interrupt
+    defw ecall_x                    ; Supervisor delegated interrupt
     defw ecall_x                    ; Reserved
-    defw ecall_x                    ; Machine software interrupt
+    defw ecall_x                    ; Machine delegated interrupt
     defw timer_interrupt						; User timer interrupt
     defw timer_interrupt						; Supervisor timer interrupt
     defw ecall_x                    ; Reserved
