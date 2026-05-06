@@ -1,12 +1,29 @@
 ; FAT Bios Paramater block
 FAT_BPB_SIGNATURE EQU 0xaa55
 
+; 0x0 - 0
+; 0x4 - 4
+; 0x8 - 8
+; 0xC - 12
+; 0x10- 16
+
 STRUCT
+; 0x0 - 0x2 
 BS_jmpBoot BYTE 3
+
+; 0x3 - 0xA (INITAL BYTE NOT ALIGNED)
 BS_OEMName BYTE 8
+
+; 0xB - 0xC (LOAD HALF)
 BPB_BytsPerSec BYTE 2
+
+; 0xD - 0xD (LOAD BYTE)
 BPB_SecPerClus BYTE
+
+; 0xE - 0xF (LOAD HALF?)
 BPB_RsvdSecCnt BYTE 2 ; this is 1 for FAT 12 and 16 and typically 32 for FAT32
+
+; 0x10 - 0x12 (LOAD HALF)
 BPB_NumFATs BYTE ; this should be 2 but >= 1 is technically valid
 BPB_RootEntCnt BYTE 2 ; for FAT32 this should be 0
 BPB_TotSec16 BYTE 2
