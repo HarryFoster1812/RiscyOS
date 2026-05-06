@@ -2,9 +2,18 @@ import os
 import pty
 import threading
 import sys
+from time import sleep
 
 from board_comms import BoardComms, CMD
 
+comms_lock = threading.Lock()
+
+def write_fifo(board, byte):
+    with comms_lock:
+        board._w8(CMD.PeripheralWrite)
+        board._w8(0)
+        board._w8(byte)
+        board._r8()  # ACK
 
 def handle_master(master_fd, board: BoardComms):
     """
@@ -21,15 +30,26 @@ def handle_master(master_fd, board: BoardComms):
 
             # For now: simple byte-wise FIFO write
             for b in data:
-                board._w8(CMD.PeripheralWrite)
-                board._w8(0)  # FIFO
-                board._w8(b)
-                board._r8()   # consume ACK
+                write_fifo(board, b)
 
         except Exception as e:
             print(f"[ERR write] {e}")
             break
 
+def read_fifo_all(board):
+    data = []
+
+    with comms_lock:
+        board._w8(CMD.PeripheralRead)
+        board._w8(0)
+
+        while True:
+            flag = board._r8()
+            if flag != 0xFF:
+                break
+            data.append(board._r8())
+
+    return data
 
 def poll_board(master_fd, board: BoardComms):
     """
@@ -37,15 +57,12 @@ def poll_board(master_fd, board: BoardComms):
     """
     while True:
         try:
-            board._w8(CMD.PeripheralRead)
-            board._w8(0)
+            data = read_fifo_all(board)
 
-            while True:
-                flag = board._r8()
-                if flag != 0xFF:
-                    break
-                byte = board._r8()
-                os.write(master_fd, bytes([byte]))
+            if data:
+                os.write(master_fd, bytes(data))
+
+            sleep(0.001)  # prevent CPU spin
 
         except Exception as e:
             print(f"[ERR read] {e}")
