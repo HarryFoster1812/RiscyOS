@@ -12,6 +12,7 @@ kernel_stack_size EQU 600
 #include "./sys/ecall_handler.s"
 
 ;; Scheduler
+#include "./kernel/idle_task.s"
 #include "./kernel/process.s"
 #include "./kernel/scheduler.s"
 #include "./arch/riscv/context_switch.s"
@@ -46,9 +47,13 @@ kernel_name DEFB "Sleep-Deprived Squirrel\0"
 
 ; pointer to the current pcb/process that is executing
 current_pcb DEFW 0x0
-IDLE_TASK_PCB DEFW 0x0 ; holds a reference to the idle_program pcb which the scheduler will switch to if there is no availble program
+
 #include "./kernel/slab_def.s"
 #include "./kernel/memory/ualloc_array_def.s"
+
+kidle DEFB 0x0 ; bool telling the kernel if it is currently idle
+
+ALIGN
 
 ; Kernel HEAP
 kernel_heap_start DEFB 0

@@ -12,7 +12,7 @@ SRUCT
 lfn_buffer BYTE 200
 lfn_length WORD
 lfn_active BYTE
-short_name BYTE, 11
+short_name BYTE 11
 
 fat_init:
 	addi sp, sp, -8  
@@ -151,7 +151,7 @@ fat_start_read:
 	li t3, 512
 	div a0, a0, t3 ; cluster num / 512 (gets the sector which the cluster fat entry will be in)
 	add a0, a0, t1
-	bgt a0, t2 fat_read_fail
+	bgt a0, t2, fat_read_fail
 
 	; start read operation
 	tail sd_start_read

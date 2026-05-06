@@ -16,21 +16,19 @@ schedule:
 	sw ra, [sp]
 
 	mv s0, a0
-	la a2, current_pcb
 
 	call schedule_next
 	bnez a0, %F1
-	la a0, IDLE_TASK_PCB
-	mv a2, a0
+  ; check if kernel is idle already
+  lb a0, kidle
+  bnez a0, schedule_exit
+  ; else we are going proc -> idle
 	1
 
-	; a2 - current pcb
-	; a1 - pointer to target pcb
-	mv a1, a0
-	; a0 - trap frame
-	mv a0, s0
+	; a0 - pointer to target pcb
 	call context_switch
-
+  
+  schedule_exit:
 	sw ra, [sp]
 	addi sp, sp, 4
 	ret
