@@ -87,6 +87,7 @@ switch_to_idle:
 	csrrw t1, MSTATUS, t1
 	csrrw t2, MSCRATCH, t2
   
+	beqz t6, context_switch_exit ; if the current_pcb is null (this happens at boot)
   j %B1
 
 

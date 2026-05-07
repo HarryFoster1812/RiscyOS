@@ -46,11 +46,37 @@ NOTE: the >= so i need to make sure the last word is not accessable
 
 The main reason for the DMMU virt start is because my origonal plan was just base + offset dmmu which is bad because say the data section was from 0x40_100 to 0x40_200 then for my base to work i would have to set the base to be 0x40_000 for all the addresses to align up but this exposes a vaulnerabliltiy because if i try to write to 0x90 it will work but it should not be able to since it is out side of the data section and could potentially modify the text section. 
 
-I just though of something, on a swap if the  origonal program is swapped then the forked one will read incorrect memory addresses so i need to have some kind of dependency where if another pcb which relies on the text section then i need to load that text section somewhere and then modify both
+I just though of something, on a swap if the  original program is swapped then the forked one will read incorrect memory addresses so i need to have some kind of dependency where if another pcb which relies on the text section then i need to load that text section somewhere and then modify both
 
 Oh and if the original exits then i need to make sure the text section is saved somewhere otherwise the fork does not work. WHY ARE OS SO FUCKING COMPLICATED I LOVE AND HATE THIS
 
 Ok so new plan, even more complicated, I am going to make a kind of poor mans paging system, instead of just pointing to the pentry instead i create a memory segment manager so i can count how many references and if they go to 0 then ufree else it will persist in memory, i will store two segments per PCB, one text and one data, on fork shallow copy the text (give it a pointer to the existing) and allocate a new  data segment then memcpy parent to child.
 
-
 For process swapping, now that I have a mmu i can make sure that programs cant write outside of the program bounds. This means that I know 100% that no user program can do aything to the 1MiB frame store so if near the end i am very desperate i could rewrite kmalloc to use the frame buffer. I do want to avoid having the flat allocator inside of the kernel space for the frame buffer so i am going to re-use the flat alloctor logic and modify the functions to just take a pointer to the bit field and some metadata about the length, minium block len ect
+
+At this point I have accpeted that I really do not have enough time for this, i really should of started earlier and worked more on this. This has been 100% my favourite module, I have learnt a lot about hardware. My new goal is to dial it back a bit and get file loading and maybe execution of one or two programs which are at a predefined location. I do really want to continue this project just for the sake of learning and understanding how the system comes together so I hope I can work on it over summer or maybe next year in industry.
+
+I havent really updated this in while so here is where i am at:
+- The SD card works. I can read from any address i want
+- I need to implement a FAT Driver and it needs to be Non-Blocking
+I dont really know the best way to do this, I do have a scheduler but it handles processes and not kernel tasks i have no idea how hard it would be to schedule kernel tasks or how long it would take to modify the things i have made and i dont really have enough time to find out
+
+My plan for tasks is that each IO will have its own queue so: 
+- Serial Queue
+- SD queue
+- Any thing else i cant think of
+
+And if it is empty then there is nothing to do (obviously)
+but if there is something then we need to set it off (since it will be a multi-step fsm) and then we can let it interrupt until the task is finished at which point we either start the next one or there are no more so just stop
+
+The FAT driver seems the most annoying and i dont know how it should work when it is the kernel who wants something doting (maybe the pid should be 0?)
+My though of the fat driver is to have a FAT_IO type where then each type would have its own fsm eg if it is a find file:
+- Get current dir (root if non provided via the FILE struct or if it is a kernel operation) 
+- Read the FAT DIR
+- Read entries
+- Parse name and try to match to string part eg test if name read matched FULLY x in example "/x/y"
+- Read off cluster number
+- Save it in a open file
+
+
+I think i will have a special one for read ELF

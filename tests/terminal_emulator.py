@@ -19,7 +19,7 @@ def handle_master(master_fd, board: BoardComms):
     """
     This is where we translate between:
     - screen (raw bytes)
-    - your structured protocol
+    - KOMDO protocol
     """
 
     while True:

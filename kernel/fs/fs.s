@@ -102,6 +102,12 @@ fat_init:
   sw t5, FAT_SECTOR_COUNT[t1]
   sw t6, ROOT_DIR_FIRST_CLUSTER[t1]
 
+	; if everything was successful then we can create our load init task
+	li a0, SD_IO_REQ_ELF
+	call make_io_request
+	; i know i shouldnt but i am going to assume that kmalloc succeds on the first call...
+	sb zero, IO_REQ_PROC_ID[a0] ; set task proc id to 0 (kernel)
+
   mbr_invalid:
   bpb_invalid:
 
@@ -134,6 +140,18 @@ cluster_to_lba:
   mul a0, a0, t2
   add a0, a0, t1
   ret
+
+; this is here because i want to save on space and not store both a cluster and sector
+lba_to_cluster:
+  la t0, FS_RUN_INFO
+  lw t1, CLUSTER_BEGIN_LBA[t0]
+  lbu t2, SECTORS_PER_CLUSTER[t0]
+
+	sub a0, a0, t1
+  div a0, a0, t2
+  addi a0, a0, 2 
+  ret
+
 
 ; a0 - current directory
 dir_lookup:

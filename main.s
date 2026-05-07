@@ -44,6 +44,9 @@ kernel_stack_size EQU 600
 ; Kernel BSS
 ; I know I have limited space but naming the kernel is very important
 kernel_name DEFB "Sleep-Deprived Squirrel\0"
+proc_init DEFB "/init\0"
+
+ALIGN
 
 ; pointer to the current pcb/process that is executing
 current_pcb DEFW 0x0
