@@ -50,7 +50,6 @@ context_switch:
   and t1, t1, t3
 	lw t2, PCB_MSCRATCH[a0]
 
-  1
 	; swap new and load old
 	csrrw t0, MEPC, t0
 	csrrw t1, MSTATUS, t1
@@ -61,6 +60,7 @@ context_switch:
   bnez t0, switch_from_idle
 	; store old values into current pcb
 
+  1
 	sw t0, PCB_MEPC[t6]
 	sw t1, PCB_MSTATUS[t6]
 	sw t2, PCB_MSCRATCH[t6]
@@ -83,6 +83,10 @@ switch_to_idle:
 
   la t2, kernel_stack_base
 
+	csrrw t0, MEPC, t0
+	csrrw t1, MSTATUS, t1
+	csrrw t2, MSCRATCH, t2
+  
   j %B1
 
 

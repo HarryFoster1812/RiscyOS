@@ -50,6 +50,9 @@ mhandler_call_trap_handler:
     addi sp, sp, 4
 
     call trap_handler
+
+    lb t0, kidle
+    bnez t0, mhandler_end
     lw t6, current_pcb
 
     lw ra,	TF_RA[t6]
@@ -83,6 +86,7 @@ mhandler_call_trap_handler:
     lw t5,	TF_T5[t6]
     lw t6,	TF_T6[t6]
 
+mhandler_end:
 		csrrw   sp, MSCRATCH, sp  ; swap user and machine stack pointer
     mret
 

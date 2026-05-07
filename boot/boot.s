@@ -23,7 +23,7 @@ boot:
     csrw    MTVEC, t0               ; Set trap vector base address to mhandler
 
 
-    li      t0, 0x800               ; Bit 11: enable Machine External Interrupt
+    li      t0, (0x800|(1<<7))              ; Bit 11: enable Machine External Interrupt
     csrs    MIE, t0                 ; Set corresponding bit in Machine Interrupt Enable register
 
     li      t0, 0x80                ; Bit 7: global Machine Interrupt Enable (MSTATUS.MIE)
@@ -52,11 +52,4 @@ boot:
   
     csrw    MSCRATCH, sp            ; Save kernel stack pointer in MSCRATCH for trap handler use
 
-    la      sp, user_stack          ; Switch stack pointer to user-space stack
-    la      ra, user_main           ; Load address of user program entry point
-    csrw    MEPC, ra                ; Set MEPC (Machine Exception PC) to user program start
-
-    mret                            ; Return from machine mode -> jump to MEPC (user_main) in user mode
-
-
-
+    call schedule

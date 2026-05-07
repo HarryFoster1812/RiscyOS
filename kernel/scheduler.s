@@ -29,7 +29,7 @@ schedule:
 	call context_switch
   
   schedule_exit:
-	sw ra, [sp]
+	lw ra, [sp]
 	addi sp, sp, 4
 	ret
 
