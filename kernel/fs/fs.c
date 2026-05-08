@@ -30,20 +30,44 @@ extern void fat_read(int cluster_num); // this will read the correct sector into
 extern int get_next_cluster(int cluster_num);
 extern int cluster_to_lba(int cluster_num);
 extern int lba_to_cluster(int lba);
+extern io_request* make_io_request(io_request_type type);
 
 enum elf_load_states{
-	
+  ELF_OPEN_FILE,
+  ELF_READ_HEADER,
+  ELF_READ_CONTENT,
+  ELF_FINISH,
+  ELF_ERROR,
 }; 
+
+void fill_child_elf_request(sd_io_request* parent, io_request* child, enum sd_io_request_type type){
+  child->next = parent;
+  child->proc_id = parent->request.proc_id;
+  (unsigned short)child->type = parent->request.type;
+  // add to the head of the queue
+  sd_request_queue = child;
+
+}
 
 void handle_elf_load(sd_io_request* io_rq){
 	switch(io_rq->state_machine){
+    case ELF_OPEN_FILE:{
+                         // create the open file request 
+                        sd_io_request* elf_open_req = make_io_request(SD_IO_REQUEST);
+                        if(elf_open_req == NULL){
+                          //error happened - failed to make request
+                          io_rq->state_machine = ELF_ERROR;
+                          return handle_elf_load(io_rq);
+                        }
+                        fill_child_elf_request(io_rq, elf_open_req, OPEN_FILE);
+                       }
 	}
 }
 
-extern sd_io_request* sd_requeset_queue;
+extern sd_io_request* sd_request_queue;
 void sd_irsq_handler(){
-	if(sd_requeset_queue == NULL) return; // if there is no request then we can not send it anywhere
-	sd_io_request* request_to_service = sd_requeset_queue;
+	if(sd_request_queue == NULL) return; // if there is no request then we can not send it anywhere
+	sd_io_request* request_to_service = sd_request_queue;
 	
 	switch((enum sd_io_request_type)request_to_service->request.type){
 		case ELF_LOAD: return handle_elf_load(request_to_service);

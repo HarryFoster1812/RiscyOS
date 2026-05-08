@@ -25,6 +25,7 @@ make_io_request:
   la t0, current_pcb
   lbu t1, PCB_PID[t0]
   sb t1, IO_REQ_PROC_ID[a0]
+  sh zero, IO_REQ_NEXT[a0]
 
   make_io_request_fail
   lw ra, [sp]
