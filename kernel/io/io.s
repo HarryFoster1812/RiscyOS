@@ -13,6 +13,7 @@ make_io_request:
   sw ra, [sp]
   mv s0, a0
   la t0, IO_TYPE_TABLE
+  slli a0, a0, 1 ; get multiple of half word size
   add t0, t0, a0
   ; depending on type we create different sizes of objects (all inherit from the base class)
   lhu a0, [t0]

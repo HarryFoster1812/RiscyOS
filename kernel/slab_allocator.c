@@ -42,7 +42,7 @@ slab_header_t* slab_alloc_new(slab_header_t **head, uint32_t object_size, uint32
 
     // inialise the free list
     for (uint32_t i = 0; i < num_objects - 1; i++) {
-        slab_node_t* next_node = (slab_node_t*)((uint8_t*)current_node + node_size);
+        slab_node_t* next_node = (slab_node_t*)(((uint8_t*)current_node) + node_size);
         current_node->next_free = next_node;
         current_node = next_node;
     }

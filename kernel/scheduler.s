@@ -40,7 +40,7 @@ schedule_next:
 	sw s0, [sp]
 
 	lw t0, current_pcb
-	; check if current_pcb is null (This should never happen but maybe)
+	; check if current_pcb is null (this happens at boot)
 	beqz t0, %F1
 	mv s0, t0 ; store the current pcb so we can detect if we go round in a circle
 	li t2, STATE_READY

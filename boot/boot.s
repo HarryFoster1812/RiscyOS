@@ -35,6 +35,7 @@ boot:
     sw      zero, 12[t0]            ; Clear/acknowledge any pending interrupts
 
 		call kheap_init									; Initalise the kernel heap
+    call k_slab_init                ; Initalise the slabs with queues within each one
 		call ualloc_init								; initalise the user-space allocator
 
     call spi_init										; Initise the spi configuration

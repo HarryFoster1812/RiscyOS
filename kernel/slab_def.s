@@ -1,4 +1,5 @@
 #include <process.inc>
+#include <file.inc>
 
 slabs_to_init EQU 2
 slabs_init_size EQU 3
@@ -18,6 +19,7 @@ init_loop:
   ; calculate the location of the foest
   addi t1, t1, -1 ; -1 since we are going backwards
   mul t2, t1, t0
+  slli t2, t2, 2 ; multiply by 4 for words
   add a0, a0, t2
 
   
@@ -32,6 +34,7 @@ init_loop:
   lw s0, [sp]
   lw ra, 4[sp]
   addi sp, sp, 8
+  ret
 
 slab_defs:
 pcb_slab_head DEFW 0x0
@@ -39,5 +42,5 @@ pcb_slab_object_size DEFW PCB_SIZE
 pcb_slab_object_count DEFW 5
 
 file_slab_head DEFW 0x0
-file_slab_object_size DEFW PCB_SIZE
+file_slab_object_size DEFW FILE_STRUCT_SIZE
 file_slab_object_count DEFW 5

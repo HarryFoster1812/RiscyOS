@@ -1,3 +1,4 @@
+#pragma once
 STRUCT SD_IO_REQ_SIZE
 
 ELF_FILE_NAME WORD ; pointer to string

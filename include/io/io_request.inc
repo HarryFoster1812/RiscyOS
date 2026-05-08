@@ -1,3 +1,4 @@
+#pragma once
 STRUCT
 IO_REQ_NEXT WORD
 IO_REQ_TYPE HALF

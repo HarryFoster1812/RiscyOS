@@ -23,6 +23,7 @@ typedef struct {
 
     void* pentry; // this is text section base offset
     int ptext_size; // this is used as text section limit
+    int parent_dir_cluster;// this is the lba of the parent directory start?
 
     void* dmmu_physical; // this is the physical base address
     void* pdata_start; // this is the .rodata section and is used for data MMU virt start

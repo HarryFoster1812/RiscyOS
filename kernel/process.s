@@ -14,6 +14,24 @@ ecall_getpid:
 	ret
 
 
+get_pcb_from_id:
+	lw t0, current_pcb
+	; check if current_pcb is null (this should not happen)
+	beqz t0, %F1
+	mv t3, t0 ; store the current pcb so we can detect if we go round in a circle
+	2
+  lbu t1, PCB_PID[t0] ; read id
+	beq t1, a0, %F1 ; if the process is the target return pcb
+	lw t0, PCB_NEXT[t0] ; walk pcb pointer
+
+	bne t0, t3, %B2 ; if the process is not the one we started at then read the next one
+  mv t0, zero ; this is a null failure
+  1
+  mv a0, t0
+  ret
+
+
+
 ; fork
 ; int fork(void);
 ; failure = -1

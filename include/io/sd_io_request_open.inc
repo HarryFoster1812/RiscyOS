@@ -1,0 +1,8 @@
+#pragma once
+STRUCT SD_IO_REQ_SIZE
+
+ELF_FILE_NAME WORD ; pointer to string
+PARENT_DIR_CLUSTER WORD ; pointer to string
+
+STRUCT_ALIGN 4
+SD_IO_REQ_SIZE_OPEN ALIAS

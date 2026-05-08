@@ -1,0 +1,7 @@
+#pragma once
+STRUCT SD_IO_REQ_SIZE
+
+FILE_STRUCT WORD ; pointer to string
+
+STRUCT_ALIGN 4
+SD_IO_REQ_SIZE_READ ALIAS
