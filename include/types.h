@@ -9,4 +9,10 @@ typedef signed char int8_t;
 
 typedef unsigned int uintptr_t;
 
+#define true 1
+#define false 1
+
 #define NULL 0
+
+
+typedef void (*op_complete_cb)(void* ctx, int status);

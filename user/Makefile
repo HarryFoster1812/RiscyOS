@@ -11,7 +11,7 @@ LIB = RiscyLibc/riscylibc.a
 
 # User programs
 USER_DIR = user_programs
-PROGRAMS = idle shell
+PROGRAMS = init shell
 
 # Final binaries
 BINS = $(addprefix $(BUILD_DIR)/, $(PROGRAMS))

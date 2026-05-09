@@ -44,3 +44,9 @@ enum Elf_Ident {
 # define ELFDATA2LSB	(1)  // Little Endian
 # define ELFCLASS32	(1)  // 32-bit Architecture
 # define ELF_MACHINE_RISCV (0xF3)
+
+enum Elf_Type {
+	ET_NONE		= 0, // Unkown Type
+	ET_REL		= 1, // Relocatable File
+	ET_EXEC		= 2  // Executable File
+};

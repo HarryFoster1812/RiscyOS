@@ -164,7 +164,7 @@ static void fs_open_post_io(fs_open_ctx_t* ctx, uint32_t lba,
 	req->lba      = lba;
 	req->callback = fs_open_step;   
 	req->ctx      = ctx;
-	io_sched_submit(req);           // enqueue; returns immediately
+	io_sched_submit(req);
 }
 
 void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context) {

@@ -7,31 +7,7 @@
 #include <io/sd_functions.h>
 #include <mm.h>
 #include <util.h>
-#include <io/fs/fs_open.h>
-
-typedef enum {
-    FS_SEEK_WALK_FAT,  
-    FS_SEEK_DONE,
-    FS_SEEK_ERROR,
-} fs_seek_state_t;
-
-typedef struct {
-    uint32_t cluster_index;
-    uint8_t  sector_in_cluster;
-    uint16_t byte_in_sector;
-} seek_position_t;
-
-typedef struct {
-    fs_seek_state_t    state;
-    FILE* file;
-    uint32_t           current_cluster;     // cluster we are currently walking from
-    uint32_t           clusters_remaining;  // how many more hops needed
-    seek_position_t    target;              // pre-computed final position
-    uint32_t           target_offset;       // saved for updating file->file_offset
-    op_complete_cb     on_complete;
-    void*              caller_ctx;
-} fs_seek_ctx_t;
-
+#include <io/fs/fs_seek.h>
 
 void fs_seek_step(void* raw_ctx, int status);
 
@@ -87,7 +63,7 @@ static void fs_seek_submit(FILE* file,
     uint32_t clusters_to_skip = target.cluster_index - start_cluster_index;
 
     if (clusters_to_skip == 0) {
-        // Already on the right cluster — just update the sub-cluster fields
+        // Already on the right cluster just update the sub-cluster fields
         file->current_sector = target.sector_in_cluster;
         file->current_byte    = target.byte_in_sector;
         file->file_offset       = target_offset;
@@ -111,12 +87,6 @@ static void fs_seek_submit(FILE* file,
     uint32_t fat_lba = fat_calcualte_lba(start_cluster);
     fs_seek_post_io(ctx, fat_lba);
 }
-
-typedef enum{
-	SEEK_SET,
-	SEEK_CUR,
-	SEEK_END,
-} seek_whence;
 
 void fs_seek_whence(FILE* file, int32_t offset, int whence, op_complete_cb on_complete, void* ctx) {
     uint32_t target;

@@ -1,7 +1,7 @@
 #pragma once
 #include <types.h>
-#include <fs_running_info.h>
 #include <file.h>
+#include "fs.h"
 
 typedef enum {
 	FSOPEN_PARSE_DIR_SECTOR,  // a dir sector is in the DMA buffer; parse it
@@ -19,8 +19,6 @@ typedef struct {
 	char        component_83[11]; // FAT 8.3 packed format (space-padded, no dot)
 } path_walker_t;
 
-typedef void (*op_complete_cb)(void* ctx, int status);
-
 typedef struct {
 	fs_open_state_t  state;
 	path_walker_t    walker;
@@ -33,12 +31,8 @@ typedef struct {
     void*            caller_ctx;
 } fs_open_ctx_t;
 
-#define SD_TX_RAM 0x20300
 
 extern void set_initial_dir(fs_open_ctx_t* req);
 
-
-
-extern FS_RUN_INFO* fs_running_info;
 
 void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context);

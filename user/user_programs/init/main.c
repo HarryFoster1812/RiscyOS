@@ -3,10 +3,11 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-
+char hello[] = "Hello, World!";
 
 int main() {
 
+//  write(0, &hello, sizeof(hello))
 	// Fork
 	pid_t pid = fork();
 

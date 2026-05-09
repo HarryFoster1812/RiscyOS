@@ -3,7 +3,10 @@
 #include <mm.h>
 #include <util.h>
 #include <io/fs/fs_open.h>
+#include <io/fs/fs_read.h>
+#include <io/fs/fs_close.h>
 #include <elf/elf_header.h>
+#include <process.h>
 #include <elf/elf_section_header.h>
 #include <elf/elf_program_header.h>
 
@@ -17,12 +20,12 @@ typedef enum {
 } elf_state_t;
 
 typedef struct {
-    elf_state_t       state;
+    elf_state_t state;
     FILE file;
-    Elf32_Ehdr      header;
-    int               current_seg;  // which program header we are loading
-    uint8_t           hdr_buf[sizeof(Elf32_Ehdr)];
-    uint8_t           proc_id;      // process to launch when done
+    Elf32_Ehdr header;
+    Elf32_Phdr pheader;
+    int current_seg;  // which program header we are loading
+    uint8_t proc_id;      // process to launch when done
 } elf_ctx_t;
 
 void elf_step(void* raw_ctx, int status);
@@ -39,7 +42,7 @@ void elf_load_submit(const char* path, uint8_t proc_id) {
 }
 
 static void elf_submit_next_segment_read(elf_ctx_t* ctx) {
-    // Advance past any non-loadable segments without recursing
+    // Advance past any non-loadable segments 
     while (ctx->current_seg < ctx->header.e_phnum) {
         Elf32_Phdr* phdr = &ctx->header.phdrs[ctx->current_seg];
         if (phdr->p_type == PT_LOAD) break;
@@ -54,9 +57,7 @@ static void elf_submit_next_segment_read(elf_ctx_t* ctx) {
     }
 
     Elf32_Phdr* phdr = &ctx->header.phdrs[ctx->current_seg];
-    fs_read_submit(&ctx->file,
-                   (void*)phdr->p_paddr, phdr->p_filesz,
-                   elf_step, ctx);
+    fs_read_submit(&ctx->file, (void*)phdr->p_paddr, phdr->p_filesz, elf_step, ctx);
 }
 
 static void elf_finish(elf_ctx_t* ctx) {
@@ -68,6 +69,34 @@ static void elf_finish(elf_ctx_t* ctx) {
         unblock_process(pcb);
     }
     kfree(ctx);
+}
+
+int elf_validate_header(Elf32_Ehdr* hdr){
+	if(!hdr) return false;
+	if(hdr->e_ident[EI_MAG0] != ELFMAG0) {
+		return false;
+	}
+	if(hdr->e_ident[EI_MAG1] != ELFMAG1) {
+		return false;
+	}
+	if(hdr->e_ident[EI_MAG2] != ELFMAG2) {
+		return false;
+	}
+	if(hdr->e_ident[EI_MAG3] != ELFMAG3) {
+		return false;
+	}
+	if(hdr->e_ident[EI_CLASS] != ELFCLASS32) {
+		return false;
+	}
+	if(hdr->e_ident[EI_DATA] != ELFDATA2LSB) {
+		return false;
+	}
+
+	if(hdr->e_machine != ELF_MACHINE_RISCV) return false;
+	if(hdr->e_type != ET_EXEC) return false;
+
+	return true;
+
 }
 
 void elf_step(void* raw_ctx, int status) {
@@ -85,18 +114,17 @@ void elf_step(void* raw_ctx, int status) {
         // open succeeded; now read the ELF header
         ctx->state = ELF_READING_HEADER;
         fs_read_submit(&ctx->file,
-                       ctx->hdr_buf, sizeof(elf_header_t),
+                       &ctx->header, sizeof(Elf32_Ehdr),
                        elf_step, ctx);
         return;
 
     case ELF_READING_HEADER:
         // header is in hdr_buf; validate and parse
-        if (!elf_validate_header(ctx->hdr_buf)) {
+        if (!elf_validate_header(&ctx->header)) {
             ctx->state = ELF_ERROR;
             elf_finish(ctx);
             return;
         }
-        memcpy(&ctx->header, ctx->hdr_buf, sizeof(elf_header_t));
         ctx->current_seg = 0;
         // fall through: load first segment
         ctx->state = ELF_READING_SEGMENT;
