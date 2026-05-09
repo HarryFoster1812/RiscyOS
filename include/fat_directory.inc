@@ -1,8 +1,4 @@
-SFN_BODY_ALL_LOWER EQU 0x08
-SFN_EXT_ALL_LOWER EQU 0x10
-
-NOT_USED EQU 0xE5
-USED_NAME0_E5 EQU 0x05 ; i have no idea why this exists but when DIR_Name[0] =  0xE5 and it is real data then it will be set to 0x5. Why not just disallow 0xE5 from being a part of the name?
+USED_NAME0_E5 EQU 0x05 
 ; Allowable characters for names:
 ; 0-9
 ; A-Z
@@ -37,5 +33,5 @@ DIR_FileSize WORD
 FAT_DIR_STRUCT_SIZE ALIAS
 
 
-; NOTE: to delete a file just set 0xE5 to NAME[0], if it has a chain then the same need to be done for the entire chain
+; NOTE: to delete a file just set 0xE5 to NAME[0], if it has a chain then the same needs to be done for the entire chain
 ; to delete a directory, same as deleting a file apart from you do it for each file

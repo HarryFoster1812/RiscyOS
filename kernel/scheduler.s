@@ -75,6 +75,6 @@ block_current_process:
 ; void unblock_process(pcb_t *proc)
 unblock_process:
 	li t0, STATE_READY
-	sb a0, PCB_STATUS[t0]
+	sb t0, PCB_STATUS[a0]
 	ret
 

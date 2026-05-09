@@ -33,6 +33,10 @@ make_io_request:
   addi sp, sp, 4
   ret
 
+make_file_struct:
+	li a0, FILE_STRUCT_SIZE
+	tail kmalloc
+	// TODO: Make a manager so i can addd fd
 
 ; int ecall_write(int fd, void* buf, uint32_t len)
 

@@ -80,3 +80,5 @@ My though of the fat driver is to have a FAT_IO type where then each type would 
 
 
 I think i will have a special one for read ELF
+
+Well, I am coming from a night out and I am on the tram currently and doing work (admitally whilst tipsy/drunk) which is quite sad but hey that is who I am. All I can really have to say is that in comparison to people that I have talked to/hear about is that my project is not that impressive I dont know if anyone except me is going to read this but what the hell I am just going to write this and forget anyway.

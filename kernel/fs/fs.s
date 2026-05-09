@@ -8,14 +8,8 @@
 #include <io/sd_io_request_elf.inc>
 #include <io/sd_io_request_open.inc>
 
-FS_RUN_INFO DEFS FS_RUN_INFO_STRUCT_SIZE
-
-; FAT_LFN_PARSER
-SRUCT 
-lfn_buffer BYTE 200
-lfn_length WORD
-lfn_active BYTE
-short_name BYTE 11
+fs_running_info DEFS FS_RUN_INFO_STRUCT_SIZE
+ALIGN
 
 fat_init:
 	addi sp, sp, -8  
@@ -80,7 +74,7 @@ fat_init:
   ; t4 - number of fats
   ; t5 - number of sectors per fat
   ; t6 - root cluster 
-  la t1, FS_RUN_INFO
+  la t1, fs_running_info
   lw t2, [sp]
 
   lhu t3, BPB_RsvdSecCnt[t0]
@@ -141,7 +135,7 @@ sd_read_block_blocking:
 ; a0 cluster number
 ; LBA = CLUSTER_BEGIN_LBA + (cluster - 2) * SECTORS_PER_CLUSTER
 cluster_to_lba:
-  la t0, FS_RUN_INFO
+  la t0, fs_running_info
   lw t1, CLUSTER_BEGIN_LBA[t0]
   lbu t2, SECTORS_PER_CLUSTER[t0]
   addi a0, a0, -2 
@@ -151,7 +145,7 @@ cluster_to_lba:
 
 ; this is here because i want to save on space and not store both a cluster and sector
 lba_to_cluster:
-  la t0, FS_RUN_INFO
+  la t0, fs_running_info
   lw t1, CLUSTER_BEGIN_LBA[t0]
   lbu t2, SECTORS_PER_CLUSTER[t0]
 
@@ -186,7 +180,7 @@ dir_parse:
 ; update the next cluster info as well as if it is the last cluster 
 ; void fat_read(cluster_num) 
 fat_start_read:
-  la t0, FS_RUN_INFO
+  la t0, fs_running_info
 	lw t1, FAT_BEGIN_LBA[t0]
 	lw t2, FAT_SECTOR_COUNT[t0]
 	li t3, 512
@@ -245,7 +239,7 @@ set_initial_dir:
   j get_inital_dir_exit
   
 set_inital_dir_root:
-  la t0, FS_RUN_INFO
+  la t0, fs_running_info
 	lw a0, ROOT_DIR_FIRST_CLUSTER[t0]
 
 get_inital_dir_exit:

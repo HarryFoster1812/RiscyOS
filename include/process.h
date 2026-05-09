@@ -35,10 +35,10 @@ typedef struct {
     // copy pentry and ptext_size (this is shared region)
 
 
-    char pid;
-    char ppid; // parent id
+    unsigned char pid;
+    unsigned char ppid; // parent id
     char exit_code; // for parent
-    char pstatus;
-    char wait_reason; // track if it is waiting on SERIAL, FILE IO, ect
+    unsigned char pstatus;
+    unsigned char wait_reason; // track if it is waiting on SERIAL, FILE IO, ect
 
 } pcb_t;

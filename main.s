@@ -2,7 +2,7 @@ ARCH v5
 
 #define DEBUG 0
 
-kernel_stack_size EQU 600
+kernel_stack_size EQU 1000
 
 ; Kernel Text
 ;; Kernel Boot / Arch
