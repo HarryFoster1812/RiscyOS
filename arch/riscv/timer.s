@@ -44,6 +44,9 @@ timer_interrupt:
     
     addi sp, sp, -4
     sw ra, [sp]
+
+		call io_sched_pump // issue any sd operations if needed
+
 		; run scheduler
 		call schedule
 

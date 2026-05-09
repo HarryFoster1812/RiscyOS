@@ -179,7 +179,7 @@ dir_parse:
 ; this will read the fat table into memory
 ; update the next cluster info as well as if it is the last cluster 
 ; void fat_read(cluster_num) 
-fat_start_read:
+fat_calcualte_lba:
   la t0, fs_running_info
 	lw t1, FAT_BEGIN_LBA[t0]
 	lw t2, FAT_SECTOR_COUNT[t0]
@@ -252,9 +252,21 @@ get_inital_dir_exit:
   addi sp, sp, 8
   ret
 
-; this will do something idk bro
-fat_write:
 
-; a0 - current directory?
-fat_mkdir:
+file_seek_ecall:
 
+
+; a0 - FILE*
+; a1 - new position
+file_seek:
+  la t0, fs_running_info
+	lw t1, SECTORS_PER_CLUSTER[t0]
+	lw t2, FILE_FIRST_CLUSTER[a0]
+	lw t3, FILE_SIZE[a0]
+	
+	li t4, 512
+	bgt a1, t3, file_seek_end
+
+	; (new position/512) - new sector
+file_seek_end:
+	ret

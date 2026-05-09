@@ -1,5 +1,6 @@
 #pragma once
 #include "trap.h"
+#include "types.h"
 
 #define STATE_UNUSED 0
 #define STATE_READY 1
@@ -42,3 +43,8 @@ typedef struct {
     unsigned char wait_reason; // track if it is waiting on SERIAL, FILE IO, ect
 
 } pcb_t;
+
+
+
+extern pcb_t* get_pcb_from_id(uint8_t pid);
+extern void unblock_process(pcb_t* pcb);

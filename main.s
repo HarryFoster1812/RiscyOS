@@ -51,7 +51,6 @@ ALIGN
 
 ; pointer to the current pcb/process that is executing
 current_pcb DEFW 0x0
-sd_request_queue DEFW 0x0
 
 #include "./kernel/slab_def.s"
 #include "./kernel/memory/ualloc_array_def.s"
