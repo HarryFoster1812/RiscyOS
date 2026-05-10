@@ -165,7 +165,12 @@ ecall_execv:
 	addi sp, sp, -4 
 	sw ra, [sp]
 
+	; release both memory regions
+
 	lw ra, [sp]
 	addi sp, sp, 4
 	ret
 
+execv_internal:
+	// const char* path, uint8_t proc_id, pcb_t* pcb_to_fill
+ call elf_load_submit

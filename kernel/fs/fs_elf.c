@@ -23,13 +23,22 @@ typedef enum {
 	ELF_ERROR,
 } elf_state_t;
 
+typedef struct{
+    int parent_dir_cluster;// this is the cluster no of the parent directory 
+    memory_region_t* ptext_memory_region; // this is text section base offset
+    memory_region_t* pdata_memory_region; // this is text section base offset
+		void* pdata_start; // this is the .rodata section and is used for data MMU virt start
+		void* heap_start;  // pdata_start -> heap_start = rodata + data + bss 
+    int mepc;
+} process_image_t;
+
 typedef struct {
 	elf_state_t state;
 	FILE        file;
 	Elf32_Ehdr  header;
 	Elf32_Phdr  pheader;
-	uint32_t	  dir_cluster;
 	int         current_seg; /* index of the Phdr currently being processed */
+	process_image_t tmp_image;
 	uint8_t     proc_id;
 	pcb_t*      pcb;
 	void*       seg_buf;     /* physical buffer for the segment being loaded */
@@ -43,7 +52,9 @@ void elf_load_submit(const char* path, uint8_t proc_id, pcb_t* pcb_to_fill) {
 	ctx->state   = ELF_OPENING;
 	ctx->proc_id = proc_id;
 	ctx->pcb     = pcb_to_fill;
-	fs_open_submit_with_dir_parent(path, &ctx->file, 0, elf_step, ctx, &ctx->dir_cluster);
+	ctx->tmp_image.pdata_memory_region=NULL;
+	ctx->tmp_image.ptext_memory_region=NULL;
+	fs_open_submit_with_dir_parent(path, &ctx->file, 0, elf_step, ctx, &ctx->tmp_image.parent_dir_cluster);
 }
 
 /*
@@ -67,12 +78,23 @@ extern void free_pcb(pcb_t*);
 
 static void elf_finish(elf_ctx_t* ctx) {
 	if (ctx->state == ELF_ERROR) {
-		free_pcb(ctx->pcb);
+		if(ctx->tmp_image.ptext_memory_region)
+			kfree(ctx->tmp_image.ptext_memory_region);
+
+		if(ctx->tmp_image.pdata_memory_region)
+			kfree(ctx->tmp_image.pdata_memory_region);
 	}
-	if (ctx->proc_id) {
-		pcb_t* pcb    = get_pcb_from_id(ctx->proc_id);
-		pcb->tf.TF_A0 = (ctx->state == ELF_DONE) ? ctx->header.e_entry : 0;
-		unblock_process(pcb);
+	else {
+		// edit all pcb content
+		ctx->pcb->brk = ctx->tmp_image.heap_start;
+		ctx->pcb->heap_start = ctx->tmp_image.heap_start;
+		ctx->pcb->mepc = ctx->tmp_image.mepc;
+		ctx->pcb->pdata_memory_region = ctx->tmp_image.pdata_memory_region;
+		ctx->pcb->ptext_memory_region = ctx->tmp_image.ptext_memory_region;
+		ctx->pcb->pdata_start = ctx->tmp_image.pdata_start;
+		ctx->pcb->parent_dir_cluster = ctx->tmp_image.parent_dir_cluster;
+
+		unblock_process(ctx->pcb);
 	}
 	kfree(ctx);
 }
@@ -110,7 +132,6 @@ void elf_step(void* raw_ctx, int status) {
 	}
 
 	if (ctx->state == ELF_OPENING) {
-		ctx->pcb->parent_dir_cluster = ctx->dir_cluster;
 		ctx->state = ELF_READING_HEADER;
 		fs_read_submit(&ctx->file, &ctx->header, sizeof(Elf32_Ehdr),
 				elf_step, ctx);
@@ -172,12 +193,12 @@ void elf_step(void* raw_ctx, int status) {
 		 */
 		if (ctx->pheader.p_flags & PF_X) {
 			// text segment 
-			ctx->pcb->ptext_memory_region = region;
-			ctx->pcb->mepc = (int)ctx->header.e_entry;
+			ctx->tmp_image.ptext_memory_region = region;
+			ctx->tmp_image.mepc = (int)ctx->header.e_entry;
 		} else {
 			// data segment (rodata + data + bss)
-			ctx->pcb->pdata_memory_region = region;
-			ctx->pcb->pdata_start         = (void*)ctx->pheader.p_vaddr;
+			ctx->tmp_image.pdata_memory_region = region;
+			ctx->tmp_image.pdata_start         = (void*)ctx->pheader.p_vaddr;
 
 			/*
 			 * From the linker script:
@@ -189,8 +210,7 @@ void elf_step(void* raw_ctx, int status) {
 			uint32_t heap = (uint32_t)ctx->pheader.p_vaddr
 				+ ctx->pheader.p_memsz;
 			heap = (heap + 15u) & ~15u; // align to 16
-			ctx->pcb->heap_start = (void*)heap;
-			ctx->pcb->brk        = (void*)heap;
+			ctx->tmp_image.heap_start = (void*)heap;
 		}
 
 		ctx->state = ELF_SEEK_PCONTENT;
