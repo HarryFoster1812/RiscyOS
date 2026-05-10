@@ -7,9 +7,6 @@ SERIAL_CONTROL_OFFSET   EQU     0x4
 // if there is a task then read into task struct which tells which process is waiting
 // read is first come first serve so proc 1 read ou
 
-; set up IO fifo and serial task queue head
-serial_init:
-  
 
 irsq_serial_read:
     mv      a0, zero
@@ -18,27 +15,19 @@ irsq_serial_read:
     andi    t1, t1, 2                               ; 
     beqz    t1, irsq_serial_read_end          ; check if the Receiver ready bit (RxRDY) is high
     lb      a0, [t0]                                ; read  byte from serial
-    ; store it in fifo out 
-    ; check if byte is '\n'? if so then invoke scheduler read finish?
-    irsq_serial_read_end:
-    ret
+    tail tty_enqueue_recieve											; pass byte to tty
 
 ; a0 - char char_to_write
 irsq_serial_write:
-    ; check if there is a task waiting
+		addi sp, sp, -4
+		sw ra, [sp]
+		call tty_dequeue_write ; get a byte to write
+		beqz a0, irsq_serial_write_end ; if we get nothing then return
     ; if so get string
     li t0, SERIAL_PORT
-    serial_write_loop:
-        lbu     t1, SERIAL_CONTROL_OFFSET[t0]        ; Read the status byte
-        andi    t1, t1, 1                           ; Mask bit 0 (TxRDY)
-        beqz    t1, %F1                             ; If 0, transmitter is busy; poll again
-        
-        sb      a0, [t0]                            ; Write the byte to the Data register
-        ; increment task bytes written
-        ; if task bytes written == num bytes to write
-        ;     then delete task and unblock
-        1
-        ret                                         ; Return to caller 
+		sb      a0, [t0]                            ; Write the byte to the Data register
+irsq_serial_write_end:
+		ret                                         ; Return to caller 
 
 ; a0 - debug string
 k_dbg_print:
@@ -54,20 +43,6 @@ k_dbg_print:
 	j				%B1
 	2
 	ret                     
-
-; NOTE: Obsolete, new api should be a read request
-
-; ecall_poll_serial_read:
-; 	; Non-blocking (can return null)
-; 	addi sp, sp, -4
-; 	sw ra, [sp]
-; 	mv s0, a0 ; store the trap frame
-; 	call fifo_pop
-; 	sw a0, TF_A0[s0]
-; 	lw ra, [sp]
-; 	addi sp, sp, 4
-; 	ret
-
 
 ALIGN 4
 

@@ -1,5 +1,11 @@
 ENTRY(_start)
 
+PHDRS
+{
+    text PT_LOAD FLAGS(5); /* R + X */
+    data PT_LOAD FLAGS(6); /* R + W */
+}
+
 MEMORY
 {
     RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 256K
@@ -15,28 +21,32 @@ SECTIONS
     {
         *(.text._start)
         *(.text*)
-    } > RAM
+    } > RAM :text
 
     .rodata : ALIGN(4)
     {
         *(.rodata*)
-    } > RAM
+    } > RAM :data
 
     .data : ALIGN(4)
     {
         *(.data*)
-    } > RAM
+    } > RAM :data
 
     .bss : ALIGN(4)
     {
         __bss_start = .;
+
         *(.bss*)
         *(COMMON)
+
         __bss_end = .;
-    } > RAM
+    } > RAM :data
+
     _end = .;
+
     . = ALIGN(16);
-    /*  END OF STATIC IMAGE */
+
     __heap_stack_start = .;
     __heap_stack_end   = __heap_stack_start + HEAP_STACK_SIZE;
 }
