@@ -31,3 +31,9 @@ typedef struct {
 #define PT_HIOS		0x6fffffff	/* End of OS-specific */
 #define PT_LOPROC	0x70000000	/* Start of processor-specific */
 #define PT_HIPROC	0x7fffffff	/* End of processor-specific */
+
+#define PF_X		(1 << 0)	/* Segment is executable */
+#define PF_W		(1 << 1)	/* Segment is writable */
+#define PF_R		(1 << 2)	/* Segment is readable */
+#define PF_MASKOS	0x0ff00000	/* OS-specific */
+#define PF_MASKPROC	0xf0000000	/* Processor-specific */

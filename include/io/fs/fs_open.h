@@ -26,6 +26,7 @@ typedef struct {
 	uint32_t         current_lba;        // lba of the sector we last requested
 	uint8_t          sector_in_cluster;  // 0-based index within current cluster
 	FILE* out_file;         // filled in on FSOPEN_DONE
+	uint32_t*					parent_cluster_storage;
 	uint8_t          proc_id;            // process to wake when done
 	op_complete_cb   on_complete;
     void*            caller_ctx;

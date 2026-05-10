@@ -1,3 +1,5 @@
+#include <tty/tty.inc>
+#include <tty/rw_request.inc>
 ; this is the layer which will be called by the serial layer and will be responsible for capturing user input
 ; and echoing it back
 
@@ -74,14 +76,14 @@ tty_enqueue_recieve:
 	; there is someone wating - store in buffer and handle done
 	lw t1, USER_BUFFER[t0]
 	sb a1, [t1] ; store in user buffer
-	lbu t2, RW_BYES_FUFILLED[t0]
-	lbu t3, RW_BYES_REQUESTED[t0]
+	lbu t2, RW_BYTES_FUFILLED[t0]
+	lbu t3, RW_BYTES_REQUESTED[t0]
 	addi t2, t2, 1
-	beq t2, t3 user_read_request_fufilled
+	beq t2, t3, user_read_request_fufilled
 
 	addi t1, t1, 1
 	sw t1, USER_BUFFER[t0]
-	sb t2 RW_BYES_FUFILLED[t0]
+	sb t2, RW_BYTES_FUFILLED[t0]
 	addi sp, sp, -4
 	sw ra, [sp]
 	ret
@@ -106,25 +108,25 @@ tty_dequeue_write:
 	; try to get something from the echo
 	addi sp, sp, -8
 	sw s0, [sp]
-	sw ra 4[sp]
+	sw ra, 4[sp]
 	la t0, TTY_INFO
 	lw s0, [t0]
 	addi a0, s0, ECHO_FIFO
 	call fifo_dequeue
 	bnez a0, tty_dequeue_write_end
 	lw a0, TTY_WRITE_QUEUE_HEAD[s0]
-	beqz tty_dequeue_write_end
+	beqz a0, tty_dequeue_write_end
 	; increment count of user request
 	lw t0, USER_BUFFER[a0]
-	lbu t1, RW_BYES_FUFILLED[a0]
-	lbu t2, RW_BYES_REQUESTED[a0]
+	lbu t1, RW_BYTES_FUFILLED[a0]
+	lbu t2, RW_BYTES_REQUESTED[a0]
 	addi t1, t1, 1
 	beq t1,t2, user_write_request_fufilled
 	; increment buffer
 	lbu s0, [t0]
 	addi t0, t0, 1
 	sb t0, USER_BUFFER[a0]
-	sb t1, RW_BYES_FUFILLED[a0]
+	sb t1, RW_BYTES_FUFILLED[a0]
 	mv a0, s0
 	j tty_dequeue_write_end
 	
@@ -170,10 +172,10 @@ tty_make_request:
 	call kmalloc
 	blez a1, tty_make_request_fail
 	lw t0, [sp] 
-	sw t0 USER_BUFFER[a0]
+	sw t0, USER_BUFFER[a0]
 	lw a1, 4[sp]
-	sb a1, RW_BYES_REQUESTED[a0]
-	sb zero, RW_BYES_FUFILLED[a0]
+	sb a1, RW_BYTES_REQUESTED[a0]
+	sb zero, RW_BYTES_FUFILLED[a0]
 	sw zero, RW_NEXT_REQUEST[a0]
 	la t0, current_pcb
 	lw t0, [t0]
@@ -186,7 +188,7 @@ rw_walk_list:
 	lw t1, [t0]
 	beqz t1, rw_add_to_back
 	mv t0, t1
-	addi t0, RW_NEXT_REQUEST
+	addi t0, t0, RW_NEXT_REQUEST
 	j rw_walk_list
 
 	rw_add_to_back:

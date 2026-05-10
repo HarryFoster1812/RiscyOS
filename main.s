@@ -22,6 +22,7 @@ kernel_stack_size EQU 1000
 #include "./kernel/io/io.s"
 
 ;; IO Drivers
+#include "./kernel/io/tty.s"
 #include "./drivers/drivers.s"
 
 ;; Memory
@@ -30,6 +31,7 @@ kernel_stack_size EQU 1000
 #include "./kernel/memory/memory_segment.s"
 
 ;; Utility Functions
+#include "./lib/fifo.s"
 #include "./lib/maths.s"
 #include "./lib/delay.s"
 #include "./lib/memutils.s"

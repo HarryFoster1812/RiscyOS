@@ -27,7 +27,7 @@ lw ra, [sp]
 addi sp, sp, 4
 
 beqz a0, schedule
-la t0, curret_pcb
+la t0, current_pcb
 lw t0, [t0]
 sw zero, TF_A0[t0]
 ret

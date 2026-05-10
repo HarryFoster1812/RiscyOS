@@ -175,9 +175,12 @@ static void set_initial_dir(fs_open_ctx_t *req){
 		pcb_t* pcb = get_pcb_from_id(req->proc_id);
 		req->current_cluster = pcb->parent_dir_cluster;
 	}
+
+	if(req->parent_cluster_storage)
+		*req->parent_cluster_storage = req->current_cluster;
 }
 
-void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context) {
+void fs_open_submit_with_dir_parent(const char *path, FILE *out_file, uint8_t proc_id, op_complete_cb callback, void *caller_context, uint32_t* parent_cluster_storage){
 	fs_open_ctx_t* ctx  = kmalloc(sizeof(*ctx));
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->out_file        = out_file;
@@ -186,6 +189,7 @@ void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_comple
 	ctx->caller_ctx			 = caller_context;
 	ctx->walker.full_path = path;
 	ctx->walker.offset    = 0;
+	ctx->parent_cluster_storage = parent_cluster_storage;
 	set_initial_dir(ctx);
 
 	// Parse the first component before posting any IO
@@ -196,6 +200,10 @@ void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_comple
 	ctx->sector_in_cluster    = 0;
 
 	fs_open_post_io(ctx, start_lba, FSOPEN_PARSE_DIR_SECTOR);
+}
+
+void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context ) {
+	fs_open_submit_with_dir_parent(path, out_file, proc_id, callback, caller_context, NULL);
 }
 
 
@@ -271,6 +279,8 @@ void fs_open_step(void* raw_ctx, int status) {
 																			// It's a directory component descend into it
 																			path_walker_advance(&ctx->walker);
 																			ctx->current_cluster   = cluster;
+																			if(ctx->parent_cluster_storage)
+																				*ctx->parent_cluster_storage = cluster;
 																			ctx->sector_in_cluster = 0;
 																			fs_open_post_io(ctx, cluster_to_lba(cluster),
 																					FSOPEN_PARSE_DIR_SECTOR);

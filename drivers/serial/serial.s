@@ -16,6 +16,8 @@ irsq_serial_read:
     beqz    t1, irsq_serial_read_end          ; check if the Receiver ready bit (RxRDY) is high
     lb      a0, [t0]                                ; read  byte from serial
     tail tty_enqueue_recieve											; pass byte to tty
+irsq_serial_read_end:
+		ret
 
 ; a0 - char char_to_write
 irsq_serial_write:
