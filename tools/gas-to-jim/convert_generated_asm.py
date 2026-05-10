@@ -395,6 +395,19 @@ def pass_collapse_la(module: Module):
                         if dest_reg.reg == node.dest().reg and dest_reg.reg == node.src(1).reg:
                             i+=1
                             continue
+                        elif dest_reg.reg == node.src(1).reg:
+                            #  I only have 3 days until the deadline so this is a hacky thing
+                            # I had a problem where a callback was doing some operations will a3 then adding the high and low components to produce the final reg
+                            mv_offset = Instruction(
+                                    op="mv",
+                                    operands=[
+                                            Operand(OperandKind.REGISTER, "", reg=node.dest().reg),
+                                            Operand(OperandKind.REGISTER, "", reg=dest_reg.reg),
+                                        ],
+                                    )
+                            out.append(mv_offset)
+                            i+=1
+                            continue
                     except:
                         pass
             

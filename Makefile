@@ -44,6 +44,7 @@ $(BUILD_DIR)/%.s: %.c
 			-fno-asynchronous-unwind-tables \
 			-fno-exceptions \
 			-fno-ident \
+			-fno-jump-tables \
 			-fverbose-asm \
 			-I include \
 			$< -o $@

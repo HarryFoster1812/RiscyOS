@@ -3,7 +3,7 @@
 #include <io/io_sd_ring.h>
 extern SD_INFO_T SD_INFO;
 
-void sd_irq_handler(void) {
+void sd_irsq_handler(void) {
     // Tail action depends only on operation direction — no FSM state.
     switch ((SD_STATE_T)SD_INFO.SD_STATE) {
         case SD_STATE_WAIT_READ:  sd_tail_read();  break;

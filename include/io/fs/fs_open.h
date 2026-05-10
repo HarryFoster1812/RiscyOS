@@ -32,7 +32,5 @@ typedef struct {
 } fs_open_ctx_t;
 
 
-extern void set_initial_dir(fs_open_ctx_t* req);
-
 
 void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context);

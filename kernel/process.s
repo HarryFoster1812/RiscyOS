@@ -30,8 +30,14 @@ get_pcb_from_id:
   mv a0, t0
   ret
 
+alloc_pcb:
+	la a0, pcb_slab_head
+	tail slab_get
 
-
+free_pcb:
+		mv a1, a0
+		la a0, pcb_slab_head
+		tail slab_free
 ; fork
 ; int fork(void);
 ; failure = -1

@@ -9,7 +9,7 @@ TARGET = shell
 SRC = main.c
 
 all:
-	$(CC) $(CFLAGS) $(SRC) $(LIB) $(LDFLAGS) -o $(TARGET)
+	$(CC) $(CFLAGS) $(SRC) $(LIB) $(LDFLAGS) -I$(abspath $(INCLUDE)) -o $(TARGET)
 
 clean:
 	rm -f $(TARGET)

@@ -96,7 +96,6 @@ int main() {
     while (1) {
         // Prompt
         printf("RiscyOS> ");
-        fflush(stdout);
 
         // Read input
         if (!fgets(input, sizeof(input), stdin)) {

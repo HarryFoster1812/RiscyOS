@@ -1,3 +1,4 @@
+#include "io/fs/fs_seek.h"
 #include <io/sd_functions.h>
 #include <types.h>
 #include <mm.h>
@@ -13,7 +14,9 @@
 typedef enum {
     ELF_OPENING,
     ELF_READING_HEADER,
-    ELF_READING_SEGMENT,
+		ELF_LOAD_PHEADER,
+    ELF_READ_PHEADER,
+    ELF_LOAD_PCONTENT,
     ELF_CLOSING,
     ELF_DONE,
     ELF_ERROR,
@@ -25,42 +28,43 @@ typedef struct {
     Elf32_Ehdr header;
     Elf32_Phdr pheader;
     int current_seg;  // which program header we are loading
-    uint8_t proc_id;      // process to launch when done
+    uint8_t proc_id; 
+    pcb_t* pcb;
 } elf_ctx_t;
 
 void elf_step(void* raw_ctx, int status);
 
-void elf_load_submit(const char* path, uint8_t proc_id) {
+void elf_load_submit(const char* path, uint8_t proc_id, pcb_t* pcb_to_fill) {
     elf_ctx_t* ctx  = kmalloc(sizeof(*ctx));
     memset(ctx, 0, sizeof(*ctx));
     ctx->state      = ELF_OPENING;
     ctx->proc_id    = proc_id;
+    ctx->pcb    = pcb_to_fill;
 
     // Sub-operation: open the file.
     // on_complete = elf_step, so when open finishes it drives us forward.
     fs_open_submit(path, &ctx->file, 0, elf_step, ctx);
 }
 
-static void elf_submit_next_segment_read(elf_ctx_t* ctx) {
+static void elf_read_next_program_header(elf_ctx_t* ctx) {
     // Advance past any non-loadable segments 
-    while (ctx->current_seg < ctx->header.e_phnum) {
-        Elf32_Phdr* phdr = &ctx->header.phdrs[ctx->current_seg];
-        if (phdr->p_type == PT_LOAD) break;
-        ctx->current_seg++;
-    }
-
-    if (ctx->current_seg >= ctx->header.e_phnum) {
-        // No loadable segments left go straight to close
-        ctx->state = ELF_CLOSING;
-        fs_close_submit(&ctx->file, elf_step, ctx);
-        return;
-    }
-
-    Elf32_Phdr* phdr = &ctx->header.phdrs[ctx->current_seg];
-    fs_read_submit(&ctx->file, (void*)phdr->p_paddr, phdr->p_filesz, elf_step, ctx);
+	ctx->current_seg++;
+	if (ctx->current_seg < ctx->header.e_phnum) {
+		ctx->state=ELF_READ_PHEADER;
+		fs_read_submit(&ctx->file, &ctx->pheader, sizeof(Elf32_Phdr), elf_step, ctx);
+	} else {
+		ctx->state = ELF_CLOSING;
+		fs_close_submit(&ctx->file, elf_step, ctx);
+	}
+    fs_read_submit(&ctx->file, &ctx->pheader, sizeof(Elf32_Phdr), elf_step, ctx);
 }
 
+extern void free_pcb(pcb_t*);
+
 static void elf_finish(elf_ctx_t* ctx) {
+	if(ctx->state == ELF_ERROR){
+		free_pcb(ctx->pcb);
+	}
     if (ctx->proc_id) {
         pcb_t* pcb    = get_pcb_from_id(ctx->proc_id);
         pcb->tf.TF_A0 = (ctx->state == ELF_DONE)
@@ -100,54 +104,54 @@ int elf_validate_header(Elf32_Ehdr* hdr){
 }
 
 void elf_step(void* raw_ctx, int status) {
-    elf_ctx_t* ctx = (elf_ctx_t*)raw_ctx;
+	elf_ctx_t* ctx = (elf_ctx_t*)raw_ctx;
 
-    if (status != 0) {
-        ctx->state = ELF_ERROR;
-        elf_finish(ctx);
-        return;
-    }
+	if (status != 0) {
+		ctx->state = ELF_ERROR;
+		elf_finish(ctx);
+		return;
+	}
 
-    switch (ctx->state) {
 
-    case ELF_OPENING:
-        // open succeeded; now read the ELF header
-        ctx->state = ELF_READING_HEADER;
-        fs_read_submit(&ctx->file,
-                       &ctx->header, sizeof(Elf32_Ehdr),
-                       elf_step, ctx);
-        return;
+	// The compiler was making lookup tables which made my converter get the wrong labels
 
-    case ELF_READING_HEADER:
-        // header is in hdr_buf; validate and parse
-        if (!elf_validate_header(&ctx->header)) {
-            ctx->state = ELF_ERROR;
-            elf_finish(ctx);
-            return;
-        }
-        ctx->current_seg = 0;
-        // fall through: load first segment
-        ctx->state = ELF_READING_SEGMENT;
-        elf_submit_next_segment_read(ctx);
-        return;
+	if(ctx->state== ELF_OPENING){
+		// open succeeded; now read the ELF header
+		ctx->state = ELF_READING_HEADER;
+		fs_read_submit(&ctx->file,
+				&ctx->header, sizeof(Elf32_Ehdr),
+				elf_step, ctx);
+		return;
+	} else if(ctx->state== ELF_READING_HEADER){
+		// header is in hdr_buf; validate and parse
+		if (!elf_validate_header(&ctx->header)) {
+			ctx->state = ELF_ERROR;
+			elf_finish(ctx);
+			return;
+		}
+		ctx->current_seg = 0;
+		// fall through: load first segment
+		ctx->state = ELF_LOAD_PHEADER;
+		fs_seek_whence(&ctx->file, ctx->header.e_phoff, SEEK_CUR, elf_step, ctx);
+		return;
+	} else if(ctx->state== ELF_LOAD_PCONTENT){
+		// segment loaded into its target address (set up in submit)
+		elf_read_next_program_header(ctx);
+		return;
+	} else if(ctx->state== ELF_READ_PHEADER){
+		if(ctx->pheader.p_type != PT_LOAD){
+			elf_read_next_program_header(ctx);
+			return;
+		}
 
-    case ELF_READING_SEGMENT:
-        // segment loaded into its target address (set up in submit)
-        ctx->current_seg++;
-        if (ctx->current_seg < ctx->header.e_phnum) {
-            elf_submit_next_segment_read(ctx);  // more segments
-        } else {
-            ctx->state = ELF_CLOSING;
-            fs_close_submit(&ctx->file, elf_step, ctx);
-        }
-        return;
+		//fs_read_submit(&ctx->file, void *buffer, int bytes, op_complete_cb callback, void *ctx);
 
-    case ELF_CLOSING:
-        ctx->state = ELF_DONE;
-        elf_finish(ctx);
-        return;
+		return;
 
-    default:
-        return;
-    }
+	} else if(ctx->state== ELF_CLOSING){
+		ctx->state = ELF_DONE;
+		elf_finish(ctx);
+		return;
+	}
+	return;
 }

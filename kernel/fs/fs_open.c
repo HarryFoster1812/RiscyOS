@@ -1,6 +1,6 @@
+#include "io/fs/fs.h"
 #include <types.h>
 #include <process.h>
-#include <io/sd_io_request.h>
 #include <fat_directory.h>
 #include <fat_entry.h>
 #include <io/io_sheduler.h>
@@ -165,6 +165,16 @@ static void fs_open_post_io(fs_open_ctx_t* ctx, uint32_t lba,
 	req->callback = fs_open_step;   
 	req->ctx      = ctx;
 	io_sched_submit(req);
+}
+
+static void set_initial_dir(fs_open_ctx_t *req){
+	if(req->walker.full_path[0] == '/' || req->proc_id == 0){
+		req->current_cluster = fs_running_info->ROOT_DIR_FIRST_CLUSTER;
+	}
+	else{
+		pcb_t* pcb = get_pcb_from_id(req->proc_id);
+		req->current_cluster = pcb->parent_dir_cluster;
+	}
 }
 
 void fs_open_submit(const char* path, FILE* out_file, uint8_t proc_id, op_complete_cb callback, void* caller_context) {

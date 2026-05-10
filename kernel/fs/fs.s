@@ -4,16 +4,24 @@
 #include <partition.inc>
 #include <bpb.inc>
 #include <fs_running_info.inc>
-#include <io/sd_io_request.inc>
-#include <io/sd_io_request_elf.inc>
-#include <io/sd_io_request_open.inc>
 
 fs_running_info DEFS FS_RUN_INFO_STRUCT_SIZE
+ALIGN
+
+g_io_sched ; initalise the scheduler from include/io/sheduler
+DEFW 0x0, 0x0, 0x0, 0x0
 ALIGN
 
 fat_init:
 	addi sp, sp, -8  
 	sw ra, 4[sp]
+	
+	; clear the g_io_sched
+	la t0, g_io_sched
+	sw zero, [t0]
+	sw zero, 4[t0]
+	sw zero, 8[t0]
+	sw zero, 12[t0]
 
 	; read the bpb
 	li a0, 0
@@ -100,15 +108,6 @@ fat_init:
   sw t6, ROOT_DIR_FIRST_CLUSTER[t1]
 
 	; if everything was successful then we can create our load init task
-	li a0, SD_IO_REQ_ELF
-	call make_io_request
-	; i know i shouldnt but i am going to assume that kmalloc succeds on the first call...
-	sb zero, IO_REQ_PROC_ID[a0] ; set task proc id to 0 (kernel)
-  sw zero, IO_REQ_NEXT[a0]
-  sw zero, SD_IO_REQ_STATE_MACHINE[a0]
-  la t0, sd_request_queue
-  sw a0, [t0]
-  call sd_irsq_handler
 
   mbr_invalid:
   bpb_invalid:
@@ -217,40 +216,6 @@ get_next_cluster:
   addi sp, sp, 8
   ret
 
-// a0 - open_file_req*
-set_initial_dir:
-  addi sp, sp, -8
-  sw s0, [sp]
-  sw ra, 4[sp]
-  mv s0, a0
-  // read the path
-  lw t0, ELF_FILE_NAME[a0]
-  lb t0, [t0] ; read first character
-  li t1, '/'
-  beq  t0, t1, set_inital_dir_root
-  // check if the pid is 0 (kernel)
-  lh a0, IO_REQ_PROC_ID[a0]
-  beqz a0, set_inital_dir_root
-  
-  call get_pcb_from_id
-  ; a0 has pcb pointer
-  lw a0, PCB_PARENT_DIR_CLUSTER[a0]
-
-  j get_inital_dir_exit
-  
-set_inital_dir_root:
-  la t0, fs_running_info
-	lw a0, ROOT_DIR_FIRST_CLUSTER[t0]
-
-get_inital_dir_exit:
-  call cluster_to_lba
-  sw a0, SD_IO_REQ_LBA[s0]
-
-  mv a0, s0
-  lw s0, [sp]
-  lw ra, 4[sp]
-  addi sp, sp, 8
-  ret
 
 
 file_seek_ecall:
