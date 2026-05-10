@@ -10,6 +10,12 @@
 #define STACK_SIZE 8192
 
 typedef struct {
+	void* physical_base;
+	unsigned int region_size;
+	unsigned int reference_count;
+} memory_region_t;
+
+typedef struct {
     trap_frame_t tf;
     int mepc;
     int mstatus;
@@ -22,19 +28,13 @@ typedef struct {
 
     void* brk; // current process brk
 
-    void* pentry; // this is text section base offset
-    int ptext_size; // this is used as text section limit
-    int parent_dir_cluster;// this is the lba of the parent directory start?
+    memory_region_t* ptext_memory_region; // this is text section base offset
+    memory_region_t* pdata_memory_region; // this is text section base offset
 
-    void* dmmu_physical; // this is the physical base address
+    int parent_dir_cluster;// this is the cluster no of the parent directory 
     void* pdata_start; // this is the .rodata section and is used for data MMU virt start
     void* heap_start;  // pdata_start -> heap_start = rodata + data + bss 
-                       // this is used to calcualte dmmu limit as (dmmu_physical+heap_start-pdata_start+STACK_SIZE)
     
-    // when forking allocate  (heap_start-pdata_start)+STACK_SIZE 
-    // copy pdata_start - pdata_start+allocate_size
-    // copy pentry and ptext_size (this is shared region)
-
 
     unsigned char pid;
     unsigned char ppid; // parent id

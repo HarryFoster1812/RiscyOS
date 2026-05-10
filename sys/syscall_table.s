@@ -1,7 +1,12 @@
 /*  Define the ECALL handlers table */
 // NOTE: Add ecalls here
 #define ECALL_TABLE_LIST \
-    X(ECALL_LCD_PRINT_DECIMAL, ecall_brk) \
+    X(ECALL_WRITE, ecall_write) \
+    X(ECALL_READ, ecall_read) \
+    X(ECALL_OPEN, ecall_open) \
+    X(ECALL_BRK, ecall_brk) \
+    X(ECALL_GETPID, ecall_getpid) \
+    X(ECALL_FORK, ecall_fork) \
 
 /* Generate the table labels */
 ECALL_TABLE_START:

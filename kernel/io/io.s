@@ -13,5 +13,11 @@ make_file_struct:
 	// TODO: Make a manager so i can addd fd
 
 ; int ecall_write(int fd, void* buf, uint32_t len)
+ecall_write:
 
 ; int ecall_read(int fd, void* buf, uint32_t len)
+ecall_read:
+
+; fd open(path)
+ecall_open:
+

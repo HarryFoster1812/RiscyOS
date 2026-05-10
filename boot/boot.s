@@ -37,14 +37,14 @@ boot:
 		call kheap_init									; Initalise the kernel heap
     call k_slab_init                ; Initalise the slabs with queues within each one
 		call ualloc_init								; initalise the user-space allocator
+		; reset the pid allocator
+		la t0, pcb_next_pid
+		li t1, 1
+		sw t1, [t0]
 
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
     call fat_init
-    ; check if sd init was sucessful
-
-    ; call load_idle_proc
-    ; call load_shell
   
     #if DEBUG==1
       la t0, kernel_stack_base

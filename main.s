@@ -27,6 +27,7 @@ kernel_stack_size EQU 1000
 ;; Memory
 #include "./kernel/memory/umem.s"
 #include "./kernel/memory/heap.s"
+#include "./kernel/memory/memory_segment.s"
 
 ;; Utility Functions
 #include "./lib/maths.s"
