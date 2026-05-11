@@ -79,7 +79,7 @@ preprocess: convert $(BUILD_DIR)/all_includes.s
 	@echo "Preprocessing main.s..."
 	$(CC) -E -x assembler-with-cpp -P $(MAIN_SRC) -I include | \
 	sed 's/__NL__/\
-/g' > $(OUT_PRE)
+/g' | sed 's/tail /j /g' > $(OUT_PRE)
 
 # Run assembler (must run from assembler dir)
 assemble: preprocess

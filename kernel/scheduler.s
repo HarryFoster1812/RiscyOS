@@ -20,7 +20,8 @@ schedule:
 	call schedule_next
 	bnez a0, %F1
   ; check if kernel is idle already
-  lb a0, kidle
+  la a0, kidle
+  lbu a0, [a0]
   bnez a0, schedule_exit
   ; else we are going proc -> idle
 	1
@@ -46,7 +47,7 @@ schedule_next:
 	li t2, STATE_READY
 	2
 	lw t0, PCB_NEXT[t0] ; get next pcb in queue
-	lw t1, PCB_STATUS[t0] ; read status of next process
+	lbu t1, PCB_STATUS[t0] ; read status of next process
 	beq t1, t2, %F1 ; if the process is ready then return that pcb 
 
 	bne t0, s0, %B2 ; if the process is not the one we started at then read the next one

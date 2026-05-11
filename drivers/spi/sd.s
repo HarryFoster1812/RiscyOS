@@ -461,14 +461,14 @@ sd_start_write:
 		li a0, 512
 		call spi_set_block_len
 		call spi_send_block
-
+    j %F3
 	2
 	mv a0, s0 ; return res 1
 	sd_invalid_write_response:
   SPI_TRANSFER(0xFF)
 	SD_CS_DISABLE()
   SPI_TRANSFER(0xFF)
-
+  3
 	lw s0, [sp]
 	lw ra, 4[sp]
 	addi sp, sp, 8

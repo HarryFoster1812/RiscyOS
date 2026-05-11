@@ -42,6 +42,9 @@ boot:
 		li t1, 1
 		sw t1, [t0]
 
+    la t0, kidle
+    sb zero, [t0]
+
 		call tty_init										; initalise serial read/write
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
