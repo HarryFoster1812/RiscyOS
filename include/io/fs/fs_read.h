@@ -5,6 +5,7 @@
 typedef enum{
 	FSREAD_LOAD_CONTENTS,
 	FSREAD_COPY_CONTENTS,
+  FS_SEEK_READ,
 	FSREAD_DONE,
 	FSREAD_ERROR,
 }fs_read_state_t;

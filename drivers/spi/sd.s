@@ -82,9 +82,10 @@ SD_ERR_INIT_FAILED   EQU 4
 ; SD_RES7
 SD_RES7_T_SIZE EQU 5 + 3 ; 3 bytes of padding
 
-g_sd_irq_ring DEFB 10
+ALIGN
+g_sd_irq_ring DEFS 10
 
-ALIGN 4
+ALIGN
 
 ; bool sd_init()
 sd_init:

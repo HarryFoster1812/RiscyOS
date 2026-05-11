@@ -230,6 +230,8 @@ kexecve:
 	li t0, STATE_BLOCKED
 	sb t0, PCB_STATUS[a1]
 	sw a0, PCB_NEXT[a1] ; ensure it is a circular linked list
+  sw zero, PCB_PTEXT_MEMORY_REGION[a1]
+  sw zero, PCB_PDATA_MEMORY_REGION[a1]
 	la t0, current_pcb
 	sw a0, [t0]
 

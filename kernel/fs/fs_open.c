@@ -237,7 +237,7 @@ void fs_open_step(void* raw_ctx, int status) {
 
 		case FSOPEN_PARSE_DIR_SECTOR: {
 																		// (SD_TX_RAM) holds one sector
-																		FAT_DIRECTORY* dir = (FAT_DIRECTORY*)SD_TX_RAM;
+																		FAT_DIRECTORY* dir = (FAT_DIRECTORY*)SD_RX_RAM;
 																		int n = 512 / sizeof(FAT_DIRECTORY);
 
 																		for (int i = 0; i < n; i++) {

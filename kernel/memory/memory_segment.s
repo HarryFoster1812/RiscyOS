@@ -10,12 +10,15 @@ make_memory_segment:
 
 ; a0 - memory_segment_t*
 aquire_memory_segment:
+beqz a0, aquire_memory_segment_exit
 	lw t0, MEMORY_REGION_REF_COUNT[a0]
 	addi t0, t0, 1
 	sw t0, MEMORY_REGION_REF_COUNT[a0]
+aquire_memory_segment_exit:
 	ret
 
 release_memory_segment:
+beqz a0, aquire_memory_segment_exit
 	lw t0, MEMORY_REGION_REF_COUNT[a0]
 	addi t0, t0, -1
 	beqz t0, memory_segment_free

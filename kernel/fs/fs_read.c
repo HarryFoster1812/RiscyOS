@@ -60,29 +60,32 @@ void fs_read_step(void* raw_ctx, int status){
 
 		case FSREAD_COPY_CONTENTS: {
 
-																		uint8_t* sector_contents = (uint8_t*)SD_TX_RAM;
+																		uint8_t* sector_contents = (uint8_t*)SD_RX_RAM;
 																		int bytes_to_copy_in_sector = ctx->bytes_remaining;
 																		if(ctx->file->current_byte+ctx->bytes_remaining >= 512){
 																			bytes_to_copy_in_sector=512-ctx->file->current_byte;
 																		}
+
+                                    uint8_t* dst = (uint8_t*)ctx->buffer;
 					
 																		for(int i=0;i<bytes_to_copy_in_sector;i++){
-																			*ctx->buffer = sector_contents[ctx->file->current_byte+i];
-																			ctx->buffer++;
-																			ctx->bytes_remaining--;
+																			dst[i] = sector_contents[ctx->file->current_byte+i];
 																		}
+                                    ctx->buffer = dst+bytes_to_copy_in_sector;
+                                    ctx->bytes_remaining-=bytes_to_copy_in_sector;
 
-																		// increment sector
-																		if(ctx->bytes_remaining==0){
-																			ctx->state = FSREAD_DONE;
-																			fs_read_finish(ctx);
-																			return;
-																		}
+                                    if(ctx->bytes_remaining==0){
+                                      ctx->file->current_byte += bytes_to_copy_in_sector;
+                                      ctx->state = FSREAD_DONE;
+                                      fs_read_finish(ctx);
+                                      return;
+                                    }
 
-																		ctx->state = FSREAD_LOAD_CONTENTS;
+                                    ctx->state = FSREAD_LOAD_CONTENTS;
 
 																		fs_seek_whence(ctx->file, bytes_to_copy_in_sector, SEEK_CUR, fs_read_step, ctx);
 																		break;
 															 }
+                         // increment sector
 	}
 }

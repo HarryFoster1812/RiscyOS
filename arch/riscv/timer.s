@@ -39,14 +39,18 @@ timer_interrupt:
 		
 		; reduce sleep timer 
 
+    addi sp, sp, -4
+    sw ra, [sp]
+		call io_sched_pump // issue any sd operations if needed
+    lw ra, [sp]
+    addi sp, sp, 4
+
 		andi t2, t0, TIME_SLICE_MAX-1
 		bnez t2, %F1
     
+
     addi sp, sp, -4
     sw ra, [sp]
-
-		call io_sched_pump // issue any sd operations if needed
-
 		; run scheduler
 		call schedule
 
