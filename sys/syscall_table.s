@@ -7,6 +7,7 @@
     X(ECALL_BRK, ecall_brk) \
     X(ECALL_GETPID, ecall_getpid) \
     X(ECALL_FORK, ecall_fork) \
+    X(ECALL_EXIT, ecall_exit) \
 
 /* Generate the table labels */
 ECALL_TABLE_START:

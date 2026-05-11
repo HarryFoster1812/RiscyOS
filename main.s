@@ -72,4 +72,4 @@ org 0x0_4000
 kernel_stack_base:
 org 0x4_0000
 
-#include "user/shell.s"
+//#include "user/shell.s"

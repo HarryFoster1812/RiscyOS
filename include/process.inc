@@ -6,6 +6,9 @@ STATE_READY EQU 1
 STATE_RUNNING EQU 2
 STATE_BLOCKED EQU 3
 
+NOT_WAITING EQU 0
+WAITING_FOR_CHILD EQU 1
+
 STACK_SIZE EQU 8192 ; Bytes (This is also the theoretical limit of sbrk)
 
 

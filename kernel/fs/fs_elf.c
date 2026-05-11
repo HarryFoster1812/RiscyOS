@@ -38,19 +38,18 @@ typedef struct {
 	Elf32_Ehdr  header;
 	Elf32_Phdr  pheader;
 	int         current_seg; /* index of the Phdr currently being processed */
+
 	process_image_t tmp_image;
-	uint8_t     proc_id;
 	pcb_t*      pcb;
 	void*       seg_buf;     /* physical buffer for the segment being loaded */
 } elf_ctx_t;
 
 void elf_step(void* raw_ctx, int status);
 
-void elf_load_submit(const char* path, uint8_t proc_id, pcb_t* pcb_to_fill) {
+void elf_load_submit(const char* path, pcb_t* pcb_to_fill) {
 	elf_ctx_t* ctx = kmalloc(sizeof(*ctx));
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->state   = ELF_OPENING;
-	ctx->proc_id = proc_id;
 	ctx->pcb     = pcb_to_fill;
 	ctx->tmp_image.pdata_memory_region=NULL;
 	ctx->tmp_image.ptext_memory_region=NULL;
@@ -75,6 +74,7 @@ static void elf_read_next_program_header(elf_ctx_t* ctx) {
 }
 
 extern void free_pcb(pcb_t*);
+extern void release_memory_segment(memory_region_t*);
 
 static void elf_finish(elf_ctx_t* ctx) {
 	if (ctx->state == ELF_ERROR) {
@@ -85,6 +85,16 @@ static void elf_finish(elf_ctx_t* ctx) {
 			kfree(ctx->tmp_image.pdata_memory_region);
 	}
 	else {
+
+
+		// fill the stack
+
+		ctx->pcb->mscratch = (unsigned int)ctx->tmp_image.pdata_start + ctx->tmp_image.ptext_memory_region->region_size;
+
+
+		// release the previous memory regions
+		release_memory_segment(ctx->pcb->ptext_memory_region);
+		release_memory_segment(ctx->pcb->pdata_memory_region);
 		// edit all pcb content
 		ctx->pcb->brk = ctx->tmp_image.heap_start;
 		ctx->pcb->heap_start = ctx->tmp_image.heap_start;
@@ -94,8 +104,8 @@ static void elf_finish(elf_ctx_t* ctx) {
 		ctx->pcb->pdata_start = ctx->tmp_image.pdata_start;
 		ctx->pcb->parent_dir_cluster = ctx->tmp_image.parent_dir_cluster;
 
-		unblock_process(ctx->pcb);
 	}
+	unblock_process(ctx->pcb);
 	kfree(ctx);
 }
 

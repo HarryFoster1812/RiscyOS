@@ -153,24 +153,91 @@ sw t0, TF_A0[s0]
 	addi sp, sp, 16
 ret
 
-; execv
-; 0x0 - _crt0 text (.text + .data + .bss)
-; heap_base 
-;   argv strings
-;   argv array (pointers)
-; heap_ptr 
-; stack 
+; a0 - pcb to reap
+; a1 - parent to awake
+reap_child:
+	lbu t0, PCB_EXIT_CODE[a0]
+	sw t0, TF_A0[a1]
+	tail free_pcb
 
-ecall_execv:
-	addi sp, sp, -4 
+
+; a0 - tf* 
+ecall_exit:
+	addi sp, sp, -4
 	sw ra, [sp]
+	mv t0, a0
+	lw a0, TF_A0[t0]
+	sb a0, PCB_EXIT_CODE[t0]
+	
+	lw a0, PCB_PTEXT_MEMORY_REGION[t0]
+	call release_memory_segment
 
-	; release both memory regions
+	lw t0, current_pcb
+	lw t0, [t0]
+	lw a0, PCB_PDATA_MEMORY_REGION[t0]
+	call release_memory_segment
 
+	; check if parent is waiting
+	1
+	lbu a0, PCB_PPID[t0]
+	call get_pcb_from_id
+	beqz a0, process_is_little_orphan_annie ; if we cant find it then it has died and the process is a orphan
+	
+	li t1, STATE_BLOCKED
+	lbu t2, PCB_STATUS[a0]
+	bne t1, t2, %F2 ; the parent is not waiting
+	
+	li t1, WAITING_FOR_CHILD
+	lbu t2, PCB_WAIT_REASON[a0]
+	bne t1, t2, %F2 ; the parent is not waiting
+	lw ra, [sp]
+	addi sp, sp, 4
+	mv a0, t0
+	mv a1, a0
+	tail reap_child
+
+	process_is_little_orphan_annie:
+	li t1, 1
+	lw t0, current_pcb
+	lw t0, [t0]
+	sb t1, PCB_PPID[t0]
+	j %B1
+	2
 	lw ra, [sp]
 	addi sp, sp, 4
 	ret
 
-execv_internal:
-	// const char* path, uint8_t proc_id, pcb_t* pcb_to_fill
- call elf_load_submit
+; execv
+; 0x0 - _crt0 text (.text + .data + .bss)
+; heap_base 
+; heap_ptr 
+;   argv strings
+;   argv array (pointers)
+; stack 
+
+ecall_execv:
+	mv a1, a0
+	lw a0, TF_A0[t0]
+	tail execve_internal
+
+kexecve:
+	addi sp, sp, -8
+	sw a0, [sp]
+	sw ra, 4[sp]
+	
+	call alloc_pcb
+	mv a1, a0
+	li t0, STATE_BLOCKED
+	sb t0, PCB_STATUS[a1]
+	sw a0, PCB_NEXT[a1] ; ensure it is a circular linked list
+	la t0, current_pcb
+	sw a0, [t0]
+
+	lw a0, [sp]
+	lw ra, 4[sp]
+	addi sp, sp, 8
+	tail execve_internal
+
+execve_internal:
+	// const char* path, pcb_t* pcb_to_fill
+ tail elf_load_submit
