@@ -14,7 +14,7 @@ int main() {
 	}
 
 	if (pid == 0) {
-		execv("/shell", NULL);
+		execv("/hello", NULL);
 		exit(1);
 	}             // Parent
 	while (1) {

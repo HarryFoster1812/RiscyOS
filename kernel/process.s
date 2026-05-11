@@ -168,6 +168,8 @@ ecall_exit:
 	mv t0, a0
 	lw a0, TF_A0[t0]
 	sb a0, PCB_EXIT_CODE[t0]
+	li t1, STATE_ZOMBIE
+	sb t1, PCB_STATUS[t0]
 	
 	lw a0, PCB_PTEXT_MEMORY_REGION[t0]
 	call release_memory_segment
@@ -196,6 +198,7 @@ ecall_exit:
 	mv a1, a0
 	tail reap_child
 
+	; it is currently 2 AM i think i am losing my mind...
 	process_is_little_orphan_annie:
 	li t1, 1
 	lw t0, current_pcb

@@ -35,6 +35,7 @@ ret
 ; int ecall_read(int fd, void* buf, uint32_t len)
 ecall_read:
 call tty_make_request
+ret
 
 ; fd open(path)
 ecall_open:
