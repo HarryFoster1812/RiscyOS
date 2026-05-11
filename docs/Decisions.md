@@ -63,6 +63,8 @@ I have made alot of decision but i forgot/am too lazy to record them. Of the one
 
 At this point I have accpeted that I really do not have enough time for this, i really should of started earlier and worked more on this. This has been 100% my favourite module, I have learnt a lot about hardware. My new goal is to dial it back a bit and get file loading and maybe execution of one or two programs which are at a predefined location. I do really want to continue this project just for the sake of learning and understanding how the system comes together so I hope I can work on it over summer or maybe next year in industry.
 
+I have been procrastinating from doing real work so for now I have made a few scripts, one which was reversed engineerd from the bennet source code. And the other which uses the protocol to emulate a terminal. This is better then bennett since it will not poll / read the memory state and just poll for (dummy) serial so overall printing should be a lot faster. The script can also give me a semi-automatic profiler which should give stats about the most critical paths which need to optimised
+
 I havent really updated this in while so here is where i am at:
 - The SD card works. I can read from any address i want
 - I need to implement a FAT Driver and it needs to be Non-Blocking

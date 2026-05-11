@@ -397,7 +397,7 @@ def pass_collapse_la(module: Module):
                             continue
                         elif dest_reg.reg == node.src(1).reg:
                             #  I only have 3 days until the deadline so this is a hacky thing
-                            # I had a problem where a callback was doing some operations will a3 then adding the high and low components to produce the final reg
+                            # I had a problem where a callback was adding the lower into a intermediate reg then some operations with the final reg then adding the high and low components to produce the final reg
                             mv_offset = Instruction(
                                     op="mv",
                                     operands=[
