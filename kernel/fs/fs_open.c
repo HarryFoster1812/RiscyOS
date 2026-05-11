@@ -169,7 +169,7 @@ static void fs_open_post_io(fs_open_ctx_t* ctx, uint32_t lba,
 
 static void set_initial_dir(fs_open_ctx_t *req){
 	if(req->walker.full_path[0] == '/' || req->proc_id == 0){
-		req->current_cluster = fs_running_info->ROOT_DIR_FIRST_CLUSTER;
+		req->current_cluster = fs_running_info.ROOT_DIR_FIRST_CLUSTER;
 	}
 	else{
 		pcb_t* pcb = get_pcb_from_id(req->proc_id);
@@ -291,7 +291,7 @@ void fs_open_step(void* raw_ctx, int status) {
 																		ctx->sector_in_cluster++;
 																		ctx->current_lba++;
 
-																		if (ctx->sector_in_cluster >= fs_running_info->SECTORS_PER_CLUSTER) {
+																		if (ctx->sector_in_cluster >= fs_running_info.SECTORS_PER_CLUSTER) {
 																			// Need to follow FAT chain to get next cluster
 																			uint32_t fat_lba = fat_calcualte_lba(ctx->current_cluster);
 																			fs_open_post_io(ctx, fat_lba, FSOPEN_PROCESS_FAT);
