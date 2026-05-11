@@ -48,7 +48,7 @@ kernel_stack_size EQU 1000
 ; Kernel BSS
 ; I know I have limited space but naming the kernel is very important
 kernel_name DEFB "Sleep-Deprived Squirrel\0"
-proc_init DEFB "/hello\0"
+proc_init DEFB "/hello1\0"
 
 ALIGN
 
