@@ -107,8 +107,6 @@ fat_init:
   sw t5, FAT_SECTOR_COUNT[t1]
   sw t6, ROOT_DIR_FIRST_CLUSTER[t1]
 
-	; if everything was successful then we can create our load init task
-
   mbr_invalid:
   bpb_invalid:
 

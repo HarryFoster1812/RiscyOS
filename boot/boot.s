@@ -46,6 +46,11 @@ boot:
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
     call fat_init
+
+		; create init process
+		la a0, proc_init
+		call kexecve
+
   
     #if DEBUG==1
       la t0, kernel_stack_base
