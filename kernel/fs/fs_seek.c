@@ -12,7 +12,7 @@ void fs_seek_step(void* raw_ctx, int status);
 
 static seek_position_t seek_decompose(uint32_t offset) {
     uint32_t bytes_per_sector  = 512;
-    uint32_t sectors_per_clus  = fs_running_info->SECTORS_PER_CLUSTER;
+    uint32_t sectors_per_clus  = fs_running_info.SECTORS_PER_CLUSTER;
     uint32_t bytes_per_cluster = bytes_per_sector * sectors_per_clus;
 
     seek_position_t pos;

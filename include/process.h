@@ -6,6 +6,7 @@
 #define STATE_READY 1
 #define STATE_RUNNING 2
 #define STATE_BLOCKED 3
+#define STATE_ZOMBIE 4
 
 #define STACK_SIZE 8192
 
