@@ -215,7 +215,7 @@ ecall_exit:
 ;   argv array (pointers)
 ; stack 
 
-ecall_execv:
+ecall_execve:
 	mv a1, a0
 	lw a0, TF_A0[t0]
 	tail execve_internal
@@ -241,3 +241,9 @@ kexecve:
 execve_internal:
 	// const char* path, pcb_t* pcb_to_fill
  tail elf_load_submit
+
+ecall_wait:
+ ret
+
+ecall_nanosleep:
+ ret 

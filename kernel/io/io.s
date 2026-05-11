@@ -38,4 +38,13 @@ call tty_make_request
 
 ; fd open(path)
 ecall_open:
+	ret
 
+
+; fd open(path)
+ecall_close:
+	ret
+
+
+ecall_lseek:
+	ret

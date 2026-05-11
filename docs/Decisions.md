@@ -82,3 +82,15 @@ My though of the fat driver is to have a FAT_IO type where then each type would 
 I think i will have a special one for read ELF
 
 Well, I am coming from a night out and I am on the tram currently and doing work (admitally whilst tipsy/drunk) which is quite sad but hey that is who I am. All I can really have to say is that in comparison to people that I have talked to/hear about is that my project is not that impressive I dont know if anyone except me is going to read this but what the hell I am just going to write this and forget anyway.
+
+It is currently Monday 11th of May. Over the weekend I implemented:
+-  File open (Involves directory parsing and walking)
+-  Serial Write
+-  Serial read
+- File reading (although not as an ecall because I havent done file descriptors )
+- ELF parsing / loading (only expecing my specific linker script)
+- Memory Segment manager (for the mmu)
+- File seeking 
+I am on the way to uni and I know 100% that it will not work. I tried to test it using qemu and gdb but I cant seem to get a function to run so, all of the code I wrote is untested. I have made the decision that until after exams today is the last day I work on this. I think the theoretical paths that I have implemented (if they work) is more than enough. I really should of started this earlier and gotten a mvp first instead of rushing to implement everything in one desperate attempt. I would like to say that I am going to learn from this but I knew that I should of done this efore I even started. 
+
+I also tried over the weekend to compile picoLibc and use that but I realised I was just procrastinating and wasting time. So i just made a very tiny terrible libc.
