@@ -31,7 +31,7 @@ mmu_set_proc:
   sw t2, MMU_IMMU_BASE[t0]
   
   lw t3, MEMORY_REGION_SIZE[t1] 
-  add t3, t3, t1 ; immu limit = text base + size
+  add t3, t3, t2 ; immu limit = text base + size
   sw t3, MMU_IMMU_LIMIT[t0]
 
   // dmmu base

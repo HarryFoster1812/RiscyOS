@@ -46,6 +46,7 @@ boot:
     sb zero, [t0]
 
 		call tty_init										; initalise serial read/write
+		call mmu_init										; enable mmu
     call spi_init										; Initise the spi configuration
     call sd_init										; Set up and send sd commands
     call fat_init
