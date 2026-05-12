@@ -1,3 +1,6 @@
 [submodule "user/RiscyLibc"]
 	path = user/RiscyLibc
 	url = git@github.com:HarryFoster1812/RiscyLibc.git
+[submodule "HW-Peripherals/verilog-spi-module"]
+	path = HW-Peripherals/verilog-spi-module
+	url = git@github.com:HarryFoster1812/verilog-spi-module.git
