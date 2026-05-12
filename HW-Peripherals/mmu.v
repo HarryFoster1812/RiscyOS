@@ -12,14 +12,11 @@
 /* Alignment faults use the VIRTUAL address (bit positions are identical).   */
 /* Access faults check the PHYSICAL address against machine-reserved space.  */
 /*                                                                            */
-/* Parameter DATA_BUS:                                                        */
-/*   0 = instruction bus (access fault check enabled, write always inactive) */
-/*   1 = data bus        (access fault check enabled for both LD and ST)     */
 /*----------------------------------------------------------------------------*/
 
 
 
-module simple_mmu #(parameter DATA_BUS = 0)
+module simple_mmu 
     (
     /* Virtual address from processor */
     input  wire [31:0] address_i,
@@ -28,7 +25,7 @@ module simple_mmu #(parameter DATA_BUS = 0)
     input  wire        read_i,
     input  wire        write_i,
 
-    /* Translation inputs from mmu_regs (held by register flip-flops) */
+    /* Translation inputs from mmu_regs */
     input  wire [31:0] base_offset_i,
     input  wire [31:0] limit_offset_i,
     input  wire [31:0] virtual_start_i,
@@ -53,7 +50,7 @@ reg abort_access;
 
 always @ (*)
 begin
-    /* Alignment check (uses virtual address; bit positions unchanged) -- */
+    /* Alignment check */
     if (read_i || write_i)
         case (size_i)
             2'h1:    abort_align = (address_i[0]   != 1'h0); /* halfword */
@@ -64,7 +61,7 @@ begin
     else
         abort_align = 1'b0;
 
-    /* Access fault check (uses physical address) ----------------------- */
+    /* Access fault check (uses physical address) */
     /*
      * With translation enabled a user program should only reach addresses
      * at or above base_offset (the user RAM region).  If the physical
@@ -85,7 +82,6 @@ begin
         else
             /*
              * Pass-through mode: user mode cannot address below 0x0004_0000.
-             * M/S mode has no restriction.
              */
             abort_access = user_mode && (address_i[31:18] == 14'h0000);
         end
@@ -105,4 +101,4 @@ begin
     write_o = write_i && (abort_o == `ABORT_NONE);
 end
 
-endmodule   // simple_mmu
+endmodule

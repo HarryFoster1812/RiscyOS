@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* mmu_regs.v - Memory-mapped Harvard Segmentation MMU control               */
+/* mmu_regs.v                                                                */
 /* */
 /* Provides kernel-writable registers to control the Instruction and Data     */
 /* MMUs. Supports Base-and-Bound protection with a Virtual Start offset for   */
@@ -17,8 +17,6 @@
 /* offset 0x18  MMU_STATUS       [0]    Current enable status (RO)          */
 /* [1]    Current mode is user (RO)           */
 /* */
-/* Only M-mode and S-mode (mode_i != 2'b00) can write these registers.        */
-/* Writes from U-mode are silently ignored.                                   */
 /*----------------------------------------------------------------------------*/
 
 module mmu_regs (
@@ -38,13 +36,13 @@ module mmu_regs (
     output reg  [31:0] data_out,
 
     /* Translation outputs — routed back to subsystem for simple_mmu */
-    output reg  [31:0] immu_base_o,   /* PA = VA + base_offset_o (user mode) */
-    output reg  [31:0] immu_limit_o,   /* PA = VA + base_offset_o (user mode) */
-    output reg  [31:0] dmmu_base_o,   /* PA = VA + base_offset_o (user mode) */
-    output reg  [31:0] dmmu_limit_o,   /* PA = VA + base_offset_o (user mode) */
-    output reg  [31:0] dmmu_virt_start_o,   /* PA = VA + base_offset_o (user mode) */
+    output reg  [31:0] immu_base_o,   
+    output reg  [31:0] immu_limit_o, 
+    output reg  [31:0] dmmu_base_o, 
+    output reg  [31:0] dmmu_limit_o,
+    output reg  [31:0] dmmu_virt_start_o, 
 
-    output reg         mmu_enable_o     /* 0 = translation disabled (pass-through) */
+    output reg         mmu_enable_o     /* 0 = translation disabled */
 );
 
 assign stall_o   =    cs_i   && 1'b0;
@@ -86,7 +84,7 @@ else
 
         endcase
 
-/* Address latch for read mux timing (data available one cycle after request) */
+/* Address latch for read mux timing */
 always @ (posedge clk)
     if (read_i) addr_latch <= address_i[5:0];
 
